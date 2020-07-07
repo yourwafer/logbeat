@@ -1,0 +1,35 @@
+{
+  "serverListFile": "/Users/weiwei/Documents/program/program-data/game-log/14-20/serverlist",
+  "logSource": {
+    "rootDirs": "/Users/weiwei/Documents/program/program-data/game-log/14-20",
+    "logDir": "logs"
+  },
+  "mysqlSources": {
+    "charge-query": {
+      "sql": "select * from ChargeOrder where `deal`=1 and !isnull(orderId) and completeAt between ? and ?",
+      "interval": 60
+    }
+
+  },
+  "events": [
+    {
+      "name": "login_record",
+      "describe": "登录事件",
+      "source": {
+        "type": "mysql",
+        "name": "charge-query"
+      },
+      "uploadType": "track",
+      "fields": {
+        "#account_id": 1,
+        "#ip": 2,
+        "#time": 3,
+        "#screen_height": 4,
+        "loginDay": 5
+      },
+      "defaultValue": {
+        "game": "djx"
+      }
+    }
+  ]
+}

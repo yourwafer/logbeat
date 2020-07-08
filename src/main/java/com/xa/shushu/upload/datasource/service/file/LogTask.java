@@ -1,16 +1,21 @@
 package com.xa.shushu.upload.datasource.service.file;
 
 import com.xa.shushu.upload.datasource.entity.LogPosition;
-import com.xa.shushu.upload.datasource.service.RowPhase;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+/**
+ * 数据文件，一行不可超过 默认缓存大小(4K*2)，如果超过4K*2，则说明日志打印输出，存在问题，解决办法需要手动清理这一行
+ */
 @Slf4j
 public class LogTask {
 
@@ -70,10 +75,12 @@ public class LogTask {
                 log.error("文件位置异常[{}]", position, e);
                 break;
             }
-            ByteBuffer byteBuffer = null;
+            ByteBuffer byteBuffer = ByteBuffer.allocate(BUF_SIZE * 2);
             do {
                 Arrays.fill(buffer, (byte) 0);
+                long curFilePosition = 0;
                 try {
+                    curFilePosition = randomAccessFile.getFilePointer();
                     read = randomAccessFile.read(buffer);
                 } catch (IOException e) {
                     log.error("读取日志数据异常[{}]", filePath, e);
@@ -92,8 +99,8 @@ public class LogTask {
                     cur = i;
 
                     int size = cur - start;
-                    if (byteBuffer != null) {
-                        size += byteBuffer.remaining();
+                    if (byteBuffer.position() > 0) {
+                        size += byteBuffer.position();
                     }
                     if (size == 0) {
                         // 排除当前字节（因为是换行符）
@@ -101,12 +108,13 @@ public class LogTask {
                         continue;
                     }
                     String line;
-                    if (byteBuffer != null) {
+                    if (byteBuffer.position() > 0) {
                         byteBuffer.put(buffer, start, (cur - start));
+                        byteBuffer.flip();
                         byte[] bytes = new byte[byteBuffer.remaining()];
                         byteBuffer.get(bytes);
-                        byteBuffer = null;
                         line = new String(bytes, StandardCharsets.UTF_8);
+                        byteBuffer.clear();
                     } else {
                         line = new String(buffer, start, (cur - start), StandardCharsets.UTF_8);
                     }
@@ -115,21 +123,31 @@ public class LogTask {
 
                     lineConsumer.accept(line);
 
-                    int newPos = start + 1;
+                    int newPos = start;
                     if ((i + 1) < read) {
                         if (buffer[i + 1] == N || buffer[i + 1] == R) {
                             newPos += 1;
                         }
                     }
 
-                    logPosition.setPosition(position + newPos);
+                    logPosition.setPosition(curFilePosition + newPos);
+
                     save.accept(logPosition);
                 }
+
                 if (start < read) {
-                    byteBuffer = ByteBuffer.allocate(BUF_SIZE);
                     byteBuffer.put(buffer, start, read - start);
                 }
             } while (read > 0);
+            if (byteBuffer.position() > 0 && !lastExecute.equals(now)) {
+                byteBuffer.flip();
+                int remaining = byteBuffer.remaining();
+                byte[] remainBytes = new byte[remaining];
+                byteBuffer.get(remainBytes);
+                String line = new String(remainBytes, StandardCharsets.UTF_8);
+                log.info("[{}]日志文件[{}]最后一行[{}]没有换行符", filePath, remaining, line);
+                lineConsumer.accept(line);
+            }
         }
     }
 
@@ -181,5 +199,20 @@ public class LogTask {
         }
 
         return lastExecute;
+    }
+
+    RandomAccessFile getRandomAccessFile() {
+        return randomAccessFile;
+    }
+
+    public void close() {
+        if (randomAccessFile != null) {
+            try {
+                randomAccessFile.close();
+                randomAccessFile = null;
+            } catch (IOException e) {
+                log.error("关闭日志文件[{}]句柄异常", filePath, e);
+            }
+        }
     }
 }

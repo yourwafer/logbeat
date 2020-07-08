@@ -1,6 +1,9 @@
 package com.xa.shushu.upload.datasource.repository;
 
+import com.xa.shushu.upload.datasource.entity.LogPosition;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
-public interface LogPositionRepository extends MongoRepository<LogPositionRepository, String> {
+@Repository
+public interface LogPositionRepository extends MongoRepository<LogPosition, String> {
 }

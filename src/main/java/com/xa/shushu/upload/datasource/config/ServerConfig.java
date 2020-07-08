@@ -18,5 +18,5 @@ public class ServerConfig {
     private int server;
 
     // 端口
-    private int port;
+    private String port;
 }

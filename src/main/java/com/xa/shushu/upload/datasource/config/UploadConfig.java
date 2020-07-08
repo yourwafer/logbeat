@@ -11,6 +11,9 @@ public class UploadConfig {
     // 运维使用的配置文件serverlist
     private String serverListFile;
 
+    // 数据开始那一天
+    private String startDay;
+
     // 日志数据源配置
     private LogFileConfig logSource;
 

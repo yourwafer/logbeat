@@ -1,5 +1,6 @@
 {
   "serverListFile": "/Users/weiwei/Documents/program/program-data/game-log/14-20/serverlist",
+  "startDay": "2020-07-02",
   "logSource": {
     "rootDirs": "/Users/weiwei/Documents/program/program-data/game-log/14-20",
     "logDir": "logs"
@@ -9,7 +10,6 @@
       "sql": "select * from ChargeOrder where `deal`=1 and !isnull(orderId) and completeAt between ? and ?",
       "interval": 60
     }
-
   },
   "events": [
     {
@@ -26,6 +26,12 @@
         "#time": 3,
         "#screen_height": 4,
         "loginDay": 5
+      },
+      "type": {
+        "#time": "time",
+        "#screen_height": "int",
+        "#money": "float",
+        "loginDay": "time"
       },
       "defaultValue": {
         "game": "djx"

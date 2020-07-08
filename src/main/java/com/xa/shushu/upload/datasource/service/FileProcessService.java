@@ -3,13 +3,14 @@ package com.xa.shushu.upload.datasource.service;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.LogFileConfig;
 import com.xa.shushu.upload.datasource.config.ServerConfig;
-import com.xa.shushu.upload.datasource.config.UploadConfig;
+import com.xa.shushu.upload.datasource.config.SystemConfig;
 import com.xa.shushu.upload.datasource.entity.LogPosition;
 import com.xa.shushu.upload.datasource.repository.LogPositionRepository;
 import com.xa.shushu.upload.datasource.service.file.LogTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -26,12 +27,15 @@ public class FileProcessService {
     private LocalDate startDay;
 
     // 全局配置
-    private UploadConfig uploadConfig;
+    private SystemConfig systemConfig;
 
     // 服务器配置
     private Map<String, ServerConfig> serverConfigs;
 
+    private volatile boolean running = true;
+
     private final ConcurrentHashMap<String, List<LogTask>> logTasks = new ConcurrentHashMap<>();
+    private Thread readThread;
 
     public FileProcessService(LogPositionRepository logPositionRepository) {
         this.logPositionRepository = logPositionRepository;
@@ -64,7 +68,7 @@ public class FileProcessService {
 
     String buildFilePath(String log, String type, int operator, int server, LocalDate time) {
         ServerConfig serverConfig = serverConfigs.get(operator + "_" + server);
-        LogFileConfig logSource = uploadConfig.getLogSource();
+        LogFileConfig logSource = systemConfig.getLogSource();
         StringJoiner joiner = new StringJoiner(File.separator);
         joiner.add(logSource.getRootDirs())
                 .add(serverConfig.getPort())
@@ -77,10 +81,53 @@ public class FileProcessService {
         return joiner.toString();
     }
 
-    public void init(LocalDate startDay, UploadConfig uploadConfig, Map<String, ServerConfig> serverConfigs) {
-        this.startDay = startDay;
-        this.uploadConfig = uploadConfig;
+    public void init(SystemConfig systemConfig, Map<String, ServerConfig> serverConfigs) {
+        this.startDay = systemConfig.getStart();
+        this.systemConfig = systemConfig;
         this.serverConfigs = serverConfigs;
+
+        readThread = new Thread(() -> {
+            while (running) {
+                try {
+                    Thread.sleep(systemConfig.getLogSource().getIntervalSecond() * 1000);
+                } catch (InterruptedException e) {
+                    // 忽视
+                    log.debug("日志读取线程被唤醒[{}]", running);
+                }
+                if (!running) {
+                    log.error("日志读取调度线程终止");
+                    break;
+                }
+                for (List<LogTask> tasks : logTasks.values()) {
+                    for (LogTask logTask : tasks) {
+                        try {
+                            logTask.start();
+                        } catch (Exception e) {
+                            log.error("调度日志任务[{}]异常", logTask, e);
+                        }
+                    }
+                }
+            }
+        });
+        readThread.start();
+    }
+
+    @PreDestroy
+    public void close() {
+        running = false;
+        readThread.interrupt();
+        for (List<LogTask> tasks : logTasks.values()) {
+            for (LogTask logTask : tasks) {
+                logTask.shutdown();
+            }
+        }
+        while (readThread.isAlive()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                // wait for done
+            }
+        }
     }
 
 }

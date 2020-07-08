@@ -5,9 +5,6 @@ import com.xa.shushu.upload.datasource.config.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -15,32 +12,19 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class UploadScheduler {
 
-    @Value("${upload-config-path:}")
-    private String configPath;
-
-    @Value("${server-list-file}")
-    private String serverListFile;
+    @Autowired
+    private SystemConfig systemConfig;
 
     @Autowired
     private FileProcessService fileProcessService;
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    private UploadConfig uploadConfig;
-
-    private LocalDate startDay;
-
     // 服配置
-    private Map<String, ServerConfig> serverConfigs = new HashMap<>();
+    private final Map<String, ServerConfig> serverConfigs = new HashMap<>();
 
     // 数据源对应事件配置
     private final Map<String, List<EventConfig>> typeMapping = new HashMap<>();
@@ -52,10 +36,7 @@ public class UploadScheduler {
 
     @PostConstruct
     public void init() throws BeansException {
-        uploadConfig = buildConfig();
-        String startDay = uploadConfig.getStartDay();
-        this.startDay = LocalDate.parse(startDay, DateTimeFormatter.ISO_LOCAL_DATE);
-
+        UploadConfig uploadConfig = buildConfig();
 
         // 初始化游戏服配置
         initServerConfig();
@@ -63,7 +44,7 @@ public class UploadScheduler {
         // 解析并初始化配置
         parseAndInitConfig(uploadConfig);
 
-        fileProcessService.init(this.startDay, uploadConfig, this.serverConfigs);
+        fileProcessService.init(systemConfig, this.serverConfigs);
 
         // 开始调度任务
         startScheduler();
@@ -91,7 +72,7 @@ public class UploadScheduler {
     }
 
     private void initServerConfig() {
-        Resource resource = applicationContext.getResource(serverListFile);
+        Resource resource = systemConfig.getServerListFile();
         List<String> lines;
         try {
             Path path = resource.getFile().toPath();
@@ -145,12 +126,9 @@ public class UploadScheduler {
     }
 
     private UploadConfig buildConfig() {
-        if (configPath == null || configPath.isEmpty()) {
-            configPath = "classpath:config.json";
-        }
         Path path;
         try {
-            Resource resource = applicationContext.getResource(configPath);
+            Resource resource = systemConfig.getConfigPath();
             path = resource.getFile().toPath();
         } catch (IOException e) {
             throw new RuntimeException(e);

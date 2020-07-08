@@ -7,6 +7,14 @@ spring:
       port: 27017
       username: admin
       password: admin
-      authentication-database: admin
-upload-config-path: classpath:config-demo.json
-server-list-file: classpath:serverlist
+      authentication-database: upload
+      database: upload
+xa:
+  config:
+    config-path: classpath:config-demo.json
+    server-list-file: classpath:serverlist
+    startDay: 2019-11-14
+    logSource:
+      rootDirs: /Users/weiwei/Documents/program/program-data
+      logDir: 14-20
+      intervalSecond: 300

@@ -35,6 +35,10 @@ public class LogTask {
     private RandomAccessFile randomAccessFile;
     // 文件路径
     private String filePath;
+
+    // 运行状态
+    private volatile boolean running = true;
+
     private final int BUF_SIZE = 1024 * 4;
     private final byte[] buffer = new byte[BUF_SIZE];
 
@@ -55,12 +59,21 @@ public class LogTask {
      * 每一次，将可以读取的数据全部读取完毕，由外部调度器定时调度
      */
     public void start() {
+        if (!running) {
+            log.info("任务终止[" + this + "]");
+            return;
+        }
         LocalDate lastExecute = logPosition.getLastExecute();
         LocalDate now = LocalDate.now();
         // 如果是前一天
         for (; !lastExecute.isAfter(now); lastExecute = lastExecute.plusDays(1)) {
-            LocalDate newTime = initAndClosePreFile(lastExecute);
-            if (newTime != lastExecute) {
+            if (!running) {
+                log.info("任务终止[" + this + "]");
+                return;
+            }
+            String path = initAndClosePreFile(lastExecute);
+            if (path != null) {
+                log.info("日志文件不存在，忽视[{}]", path);
                 continue;
             }
             long position = logPosition.getPosition();
@@ -71,12 +84,17 @@ public class LogTask {
             int read = -1;
             try {
                 randomAccessFile.seek(position);
+                log.info("重置位置[{}],开始解析处理文件[{}],", filePath, position);
             } catch (IOException e) {
                 log.error("文件位置异常[{}]", position, e);
                 break;
             }
             ByteBuffer byteBuffer = ByteBuffer.allocate(BUF_SIZE * 2);
             do {
+                if (!running) {
+                    log.info("任务终止[" + this + "]");
+                    return;
+                }
                 Arrays.fill(buffer, (byte) 0);
                 long curFilePosition = 0;
                 try {
@@ -131,8 +149,13 @@ public class LogTask {
                     }
 
                     logPosition.setPosition(curFilePosition + newPos);
-
+                    log.trace("变更文件位置[{}][{}]", logPosition.getPosition(), filePath);
                     save.accept(logPosition);
+
+                    if (!running) {
+                        log.info("任务终止[" + this + "]");
+                        return;
+                    }
                 }
 
                 if (start < read) {
@@ -151,14 +174,14 @@ public class LogTask {
         }
     }
 
-    private LocalDate initAndClosePreFile(LocalDate lastExecute) {
+    private String initAndClosePreFile(LocalDate lastExecute) {
         String path = pathBuilder.buildFilePath(logPosition.getLog(),
                 logPosition.getType(),
                 logPosition.getOperator(),
                 logPosition.getServer(),
                 lastExecute);
         if (randomAccessFile != null && path.equals(this.filePath)) {
-            return lastExecute;
+            return null;
         }
 
         if (randomAccessFile != null) {
@@ -166,9 +189,9 @@ public class LogTask {
                 randomAccessFile.close();
             } catch (IOException e) {
                 log.error("关闭文件[{}]异常", filePath, e);
-                randomAccessFile = null;
             }
         }
+        randomAccessFile = null;
 
         File file = new File(path);
         if (!file.exists()) {
@@ -177,8 +200,7 @@ public class LogTask {
             logPosition.setPosition(-1);
             save.accept(logPosition);
 
-            lastExecute = lastExecute.plusDays(1);
-            return lastExecute;
+            return path;
         }
 
         try {
@@ -190,22 +212,22 @@ public class LogTask {
             logPosition.setPosition(-1);
             save.accept(logPosition);
 
-            lastExecute = lastExecute.plusDays(1);
-            return lastExecute;
+            return path;
         }
         LocalDate pre = logPosition.getLastExecute();
         if (!pre.equals(lastExecute)) {
             logPosition.updateTime(lastExecute);
         }
 
-        return lastExecute;
+        return null;
     }
 
     RandomAccessFile getRandomAccessFile() {
         return randomAccessFile;
     }
 
-    public void close() {
+    // for test
+    void close() {
         if (randomAccessFile != null) {
             try {
                 randomAccessFile.close();
@@ -214,5 +236,17 @@ public class LogTask {
                 log.error("关闭日志文件[{}]句柄异常", filePath, e);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "LogTask{" +
+                "logPosition=" + logPosition +
+                ", filePath='" + filePath + '\'' +
+                '}';
+    }
+
+    public void shutdown() {
+        this.running = false;
     }
 }

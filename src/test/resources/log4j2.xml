@@ -28,6 +28,6 @@
         <asyncRoot level="info">
             <AppenderRef ref="Console"/>
         </asyncRoot>
-        <logger name="com.xa.shushu.upload.datasource.service.file.LogTask" level="trace"/>
+        <logger name="com.xa" level="DEBUG"/>
     </Loggers>
 </configuration>

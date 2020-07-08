@@ -1,9 +1,4 @@
 {
-  "startDay": "2020-07-02",
-  "logSource": {
-    "rootDirs": "/Users/weiwei/Documents/program/program-data/game-log/14-20",
-    "logDir": "logs"
-  },
   "mysqlSources": {
     "charge-query": {
       "sql": "select * from ChargeOrder where `deal`=1 and !isnull(orderId) and completeAt between ? and ?",
@@ -15,8 +10,8 @@
       "name": "login_record",
       "describe": "登录事件",
       "source": {
-        "type": "mysql",
-        "name": "charge-query"
+        "type": "tlog",
+        "name": "LogRecord"
       },
       "uploadType": "track",
       "fields": {

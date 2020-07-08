@@ -14,4 +14,7 @@ public class LogFileConfig {
     // 日志相对路径，默认是logs
     private String logDir;
 
+    // 每次读取时间间隔
+    private int intervalSecond;
+
 }

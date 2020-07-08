@@ -1,14 +1,15 @@
 package com.xa.shushu.upload.datasource.entity;
 
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Document
 @Data
+@ToString
 public class LogPosition {
 
     @Id

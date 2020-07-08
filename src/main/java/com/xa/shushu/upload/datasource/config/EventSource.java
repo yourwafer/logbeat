@@ -16,4 +16,12 @@ public class EventSource {
 
     // 如果是flog或者tlog，那么就是日志类型
     private String name;
+
+    public EventSource() {
+    }
+
+    public EventSource(String type, String name) {
+        this.type = type;
+        this.name = name;
+    }
 }

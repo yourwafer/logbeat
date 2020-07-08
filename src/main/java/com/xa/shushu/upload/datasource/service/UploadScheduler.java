@@ -6,7 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -24,8 +26,14 @@ public class UploadScheduler {
     @Value("${upload-config-path:}")
     private String configPath;
 
+    @Value("${server-list-file}")
+    private String serverListFile;
+
     @Autowired
     private FileProcessService fileProcessService;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     private UploadConfig uploadConfig;
 
@@ -83,9 +91,10 @@ public class UploadScheduler {
     }
 
     private void initServerConfig() {
-        Path path = Paths.get(uploadConfig.getServerListFile());
+        Resource resource = applicationContext.getResource(serverListFile);
         List<String> lines;
         try {
+            Path path = resource.getFile().toPath();
             lines = Files.readAllLines(path);
         } catch (IOException e) {
             throw new RuntimeException("读取serverlist异常");
@@ -141,12 +150,8 @@ public class UploadScheduler {
         }
         Path path;
         try {
-            if (configPath.startsWith("classpath:") || !configPath.startsWith("/")) {
-                ClassPathResource classPathResource = new ClassPathResource(configPath);
-                path = classPathResource.getFile().toPath();
-            } else {
-                path = Paths.get(configPath);
-            }
+            Resource resource = applicationContext.getResource(configPath);
+            path = resource.getFile().toPath();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

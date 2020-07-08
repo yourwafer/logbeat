@@ -1,5 +1,12 @@
 spring:
   application:
     name: shushu-upload
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      username: admin
+      password: admin
+      authentication-database: admin
 upload-config-path: classpath:config-demo.json
-excel-path : classpath:excel
+server-list-file: classpath:serverlist

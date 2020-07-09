@@ -2,18 +2,19 @@ package com.xa.shushu.upload.datasource.resource;
 
 
 import com.alibaba.fastjson.JSON;
-import com.xa.shushu.upload.datasource.resource.other.*;
+import com.xa.shushu.upload.datasource.resource.other.Getter;
+import com.xa.shushu.upload.datasource.resource.other.GetterBuilder;
+import com.xa.shushu.upload.datasource.resource.other.IndexGetter;
+import com.xa.shushu.upload.datasource.resource.other.ResourceDefinition;
 import com.xa.shushu.upload.datasource.resource.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -41,11 +42,10 @@ public class Storage<K, V> {
      *
      * @param definition
      */
-    public synchronized void initialize(ResourceDefinition definition, ApplicationContext context) {
+    public synchronized void initialize(ResourceDefinition definition) {
         if (initialized) {
             return; // 避免重复初始化
         }
-        this.applicationContext = context;
         // 设置初始化标识
         this.initialized = true;
         // 获取资源信息
@@ -59,7 +59,7 @@ public class Storage<K, V> {
         this.load();
         long end = System.currentTimeMillis();
         if (logger.isDebugEnabled()) {
-            String info = String.format("加载 %s  时间: %.2f 秒 数据: %d", resourceDefinition.getPath(), (end - start) * 0.001, this.innerValues.values.size());
+            String info = String.format("加载 %s  时间: %.2f 秒 数据: %d", resourceDefinition.getResource(), (end - start) * 0.001, this.innerValues.values.size());
             logger.debug(info);
         }
     }
@@ -171,7 +171,7 @@ public class Storage<K, V> {
         InputStream input = null;
         try {
             // 获取数据源
-            Resource resource = applicationContext.getResource(getLocation());
+            Resource resource = resourceDefinition.getResource();
             input = resource.getInputStream();
             // 获取存储空间
             Iterator<V> it = reader.read(input, getClz());
@@ -179,16 +179,6 @@ public class Storage<K, V> {
             InnerValues innerValues = new InnerValues();
             while (it.hasNext()) {
                 V obj = it.next();
-                Set<InjectDefinition> injects = resourceDefinition.getInjects();
-                for (InjectDefinition inject : injects) {
-                    Field field = inject.getField();
-                    Object value = inject.getValue(applicationContext);
-                    try {
-                        field.set(obj, value);
-                    } catch (Exception e) {
-                        logger.error("设置静态对象[{}]属性[{}]时出现异常", resourceDefinition.getClz().getSimpleName(), field.getName(), e);
-                    }
-                }
 
                 if (innerValues.put(obj) != null) {
                     K key = (K) identifier.getValue(obj);
@@ -208,7 +198,7 @@ public class Storage<K, V> {
 
         } catch (IOException e) {
             FormattingTuple message = MessageFormatter.format("静态资源[{}]所对应的资源文件[{}]不存在", getClz().getName(),
-                    getLocation());
+                    resourceDefinition.getResource());
             logger.error(message.getMessage());
             throw new IllegalStateException(message.getMessage(), e);
         } catch (ClassCastException e) {
@@ -294,15 +284,6 @@ public class Storage<K, V> {
      */
     public boolean isInitialized() {
         return initialized;
-    }
-
-    /**
-     * 获取静态资源路径
-     *
-     * @return
-     */
-    public String getLocation() {
-        return resourceDefinition.getLocation() + "/" + resourceDefinition.getPath();
     }
 
     // 内部方法
@@ -433,10 +414,6 @@ public class Storage<K, V> {
             }
         }
     }
-
-    // 实现Spring的接口
-
-    private ApplicationContext applicationContext;
 
 
 }

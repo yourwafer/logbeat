@@ -9,9 +9,11 @@ import com.xa.shushu.upload.datasource.resource.other.ResourceDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,47 +28,17 @@ import java.util.Map;
 /**
  * 事件配置服务
  */
-@Service
 @Slf4j
-public class EventConfigService implements ApplicationContextAware {
+public class EventConfigExcel {
 
-    private Storage<Integer, EventLogSetting> eventLogSettingStorage;
-
-    @Value("${upload-config-path:}")
-    private String configPath;
-
-    @Value("${excel-path:classpath:excel}")
-    private String excelPath;
-
-    //当前配置缓存
-    private UploadConfig config;
-
-
-    public UploadConfig getConfig() {
-        if (config == null) {
-            buildConfig();
-        }
-        return config;
-    }
-
-    private void buildConfig() {
-        Map<String, EventConfig> map = buildEventMap();
-        //默认配置属性大于Excel 如有相同EventConfig则取配置文件属性的相同属性将替换Excel中配置的
-        UploadConfig uploadConfig = readFromConfig();
-        for (EventConfig event : uploadConfig.getEvents()) {
-            EventConfig config = map.get(event.toUniqueName());
-            if (config != null) {
-                config.merge(event);
-                continue;
-            }
-            map.put(event.toUniqueName(), event);
-        }
-        uploadConfig.setEvents(new ArrayList<>(map.values()));
-        this.config = uploadConfig;
+    public static Map<String, EventConfig> getConfig(Resource resource) {
+        Storage<Integer, EventLogSetting> eventLogSettingStorage = new Storage<>();
+        eventLogSettingStorage.initialize(new ResourceDefinition(EventLogSetting.class, resource));
+        return buildEventMap(eventLogSettingStorage);
     }
 
     //构建Excel中所有的EventConfig
-    private Map<String, EventConfig> buildEventMap() {
+    private static Map<String, EventConfig> buildEventMap(Storage<Integer, EventLogSetting> eventLogSettingStorage) {
         //获取全局属性
         List<EventLogSetting> index = eventLogSettingStorage.getIndex(EventLogSetting.COMMON, true);
         //公共属性和类型
@@ -91,7 +63,7 @@ public class EventConfigService implements ApplicationContextAware {
     }
 
     //将Excel中的配置放入EventConfig中
-    private void dealWithEventLog(EventLogSetting setting, EventConfig config) {
+    private static void dealWithEventLog(EventLogSetting setting, EventConfig config) {
         //设置当前属性
         config.putField(setting.getName(), setting.getCsvIndex());
         //设置当前属性的Type类型
@@ -111,39 +83,5 @@ public class EventConfigService implements ApplicationContextAware {
             }
             config.putDefaultValueIfAbsent("#event_name", setting.getEventName());
         }
-    }
-
-    private UploadConfig readFromConfig() {
-        if (configPath == null || configPath.isEmpty()) {
-            configPath = "classpath:config.json";
-        }
-        Path path;
-        try {
-            if (configPath.startsWith("classpath:") || !configPath.startsWith("/")) {
-                path = applicationContext.getResource(configPath).getFile().toPath();
-            } else {
-                path = Paths.get(configPath);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return JSON.parseObject(bytes, UploadConfig.class);
-    }
-
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        eventLogSettingStorage = new Storage<>();
-        eventLogSettingStorage.initialize(new ResourceDefinition(EventLogSetting.class, excelPath), applicationContext);
-        this.applicationContext = applicationContext;
     }
 }

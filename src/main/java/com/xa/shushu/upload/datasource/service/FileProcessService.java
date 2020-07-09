@@ -1,11 +1,13 @@
 package com.xa.shushu.upload.datasource.service;
 
+import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.LogFileConfig;
 import com.xa.shushu.upload.datasource.config.ServerConfig;
 import com.xa.shushu.upload.datasource.config.SystemConfig;
 import com.xa.shushu.upload.datasource.entity.LogPosition;
 import com.xa.shushu.upload.datasource.repository.LogPositionRepository;
+import com.xa.shushu.upload.datasource.service.file.LogEventDataConsumer;
 import com.xa.shushu.upload.datasource.service.file.LogTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FileProcessService {
 
     private final LogPositionRepository logPositionRepository;
+    private final EventPublishService eventPublishService;
 
     // 日志开始处理时间
     private LocalDate startDay;
@@ -37,12 +40,13 @@ public class FileProcessService {
     private final ConcurrentHashMap<String, List<LogTask>> logTasks = new ConcurrentHashMap<>();
     private Thread readThread;
 
-    public FileProcessService(LogPositionRepository logPositionRepository) {
+    public FileProcessService(LogPositionRepository logPositionRepository, EventPublishService eventPublishService) {
         this.logPositionRepository = logPositionRepository;
+        this.eventPublishService = eventPublishService;
     }
 
     public void process(String logName, String type, ServerConfig serverConfig, List<EventConfig> eventConfigs) {
-        EventDataConsumer eventDataConsumer = new EventDataConsumer(eventConfigs);
+        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService::push);
 
         String logKey = LogPosition.toKey(serverConfig.getOperator(), serverConfig.getServer(), logName);
 
@@ -55,7 +59,7 @@ public class FileProcessService {
         });
 
         LogTask logTask = new LogTask(logPosition,
-                eventDataConsumer::consume,
+                logEventDataConsumer::consume,
                 logPositionRepository::save,
                 this::buildFilePath);
 
@@ -64,7 +68,6 @@ public class FileProcessService {
         List<LogTask> logTasks = this.logTasks.computeIfAbsent(logName, k -> new ArrayList<>());
         logTasks.add(logTask);
     }
-
 
     String buildFilePath(String log, String type, int operator, int server, LocalDate time) {
         ServerConfig serverConfig = serverConfigs.get(operator + "_" + server);

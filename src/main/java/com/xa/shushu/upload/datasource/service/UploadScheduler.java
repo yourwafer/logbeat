@@ -5,6 +5,7 @@ import com.xa.shushu.upload.datasource.config.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,9 @@ public class UploadScheduler {
     @Autowired
     private FileProcessService fileProcessService;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
     // 服配置
     private final Map<String, ServerConfig> serverConfigs = new HashMap<>();
 
@@ -37,6 +41,19 @@ public class UploadScheduler {
     @PostConstruct
     public void init() throws BeansException {
         UploadConfig uploadConfig = buildConfig();
+        Resource resource = applicationContext.getResource("classpath:EventLogSetting.xlsx");
+
+        Map<String, EventConfig> map = EventConfigExcel.getConfig(resource);
+
+        for (EventConfig event : uploadConfig.getEvents()) {
+            EventConfig config = map.get(event.toUniqueName());
+            if (config != null) {
+                config.merge(event);
+                continue;
+            }
+            map.put(event.toUniqueName(), event);
+        }
+        uploadConfig.setEvents(new ArrayList<>(map.values()));
 
         // 初始化游戏服配置
         initServerConfig();

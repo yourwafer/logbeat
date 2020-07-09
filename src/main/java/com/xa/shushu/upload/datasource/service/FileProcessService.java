@@ -1,6 +1,5 @@
 package com.xa.shushu.upload.datasource.service;
 
-import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.LogFileConfig;
 import com.xa.shushu.upload.datasource.config.ServerConfig;
@@ -17,7 +16,6 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
@@ -37,7 +35,7 @@ public class FileProcessService {
 
     private volatile boolean running = true;
 
-    private final ConcurrentHashMap<String, List<LogTask>> logTasks = new ConcurrentHashMap<>();
+    private final Map<String, List<LogTask>> logTasks = new HashMap<>();
     private Thread readThread;
 
     public FileProcessService(LogPositionRepository logPositionRepository, EventPublishService eventPublishService) {
@@ -101,18 +99,22 @@ public class FileProcessService {
                     log.error("日志读取调度线程终止");
                     break;
                 }
-                for (List<LogTask> tasks : logTasks.values()) {
-                    for (LogTask logTask : tasks) {
-                        try {
-                            logTask.start();
-                        } catch (Exception e) {
-                            log.error("调度日志任务[{}]异常", logTask, e);
-                        }
-                    }
-                }
+                execute();
             }
         });
         readThread.start();
+    }
+
+    private void execute() {
+        for (List<LogTask> tasks : logTasks.values()) {
+            for (LogTask logTask : tasks) {
+                try {
+                    logTask.start();
+                } catch (Exception e) {
+                    log.error("调度日志任务[{}]异常", logTask, e);
+                }
+            }
+        }
     }
 
     @PreDestroy

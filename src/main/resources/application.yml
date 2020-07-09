@@ -1,14 +1,3 @@
-spring:
-  application:
-    name: shushu-upload
-  data:
-    mongodb:
-      host: localhost
-      port: 27017
-      username: admin
-      password: admin
-      authentication-database: upload
-      database: upload
 xa:
   config:
     config-path: classpath:config-demo.json
@@ -18,3 +7,29 @@ xa:
       rootDirs: /Users/weiwei/Documents/program/program-data
       logDir: 14-20
       intervalSecond: 300
+spring:
+  application:
+    name: shushu-upload
+  jpa:
+    show-sql: true
+    hibernate.ddl-auto: update
+    properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    open-in-view: false
+    hibernate:
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+  datasource:
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://localhost/upload?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    hikari:
+      pool-name: user-1
+      minimum-idle: 30
+      maximum-pool-size: 30
+      connectionTimeout: 60000
+      validationTimeout: 3000
+      maxLifetime: 60000
+      register-mbeans: true

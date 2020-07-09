@@ -22,7 +22,7 @@ public class UploadScheduler {
     private SystemConfig systemConfig;
 
     @Autowired
-    private FileProcessService fileProcessService;
+    private EventProcessService eventProcessService;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -61,7 +61,7 @@ public class UploadScheduler {
         // 解析并初始化配置
         parseAndInitConfig(uploadConfig);
 
-        fileProcessService.init(systemConfig, this.serverConfigs);
+        eventProcessService.init(systemConfig, this.serverConfigs);
 
         // 开始调度任务
         startScheduler();
@@ -73,9 +73,13 @@ public class UploadScheduler {
     }
 
     private void startMysqlScheduler() {
-//        for (MysqlConfig mysqlConfig : activeMysql) {
-        // TODO
-//        }
+        for (MysqlConfig mysqlConfig : activeMysql) {
+            String sqlName = mysqlConfig.getName();
+            List<EventConfig> eventConfigs = typeMapping.get(sqlName);
+            for (ServerConfig serverConfig : serverConfigs.values()) {
+                eventProcessService.mysql(serverConfig, mysqlConfig, eventConfigs);
+            }
+        }
     }
 
     private void startLogScheduler() {
@@ -83,7 +87,7 @@ public class UploadScheduler {
             String log = entry.getKey();
             String type = entry.getValue();
             for (ServerConfig serverConfig : serverConfigs.values()) {
-                fileProcessService.process(log, type, serverConfig, typeMapping.get(log));
+                eventProcessService.log(log, type, serverConfig, typeMapping.get(log));
             }
         }
     }

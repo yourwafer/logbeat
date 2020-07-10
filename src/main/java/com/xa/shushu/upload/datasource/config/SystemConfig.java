@@ -17,6 +17,9 @@ public class SystemConfig {
     // serverlist配置
     private Resource serverListFile;
 
+    // 游戏服数据库配置
+    private DatabaseConfig database;
+
     // 数据开始时间
     private String startDay;
 

@@ -8,6 +8,10 @@ xa:
       rootDirs: /Users/weiwei/Documents/program/program-data
       logDir: 14-20
       intervalSecond: 300
+    database:
+      user-name: root
+      password: root
+      nameprefix: mhyx_
     eventPush:
       serverUrl:
       appId:
@@ -37,6 +41,3 @@ spring:
       validationTimeout: 3000
       maxLifetime: 60000
       register-mbeans: true
-
-
-

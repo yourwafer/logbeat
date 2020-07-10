@@ -13,7 +13,6 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 @Slf4j
-
 @EnableJpaRepositories("com.xa.shushu.upload.datasource.repository")
 @EnableConfigurationProperties(SystemConfig.class)
 public class UploadApplication {

@@ -1,7 +1,7 @@
 {
   "mysqlSources": {
     "charge-query": {
-      "sql": "select * from ChargeOrder where `deal`=1 and !isnull(orderId) and completeAt between ? and ?",
+      "sql": "SELECT `target`,`completeAt`,`createIP`,`completeIP`,`goods`,`money`,`orderId`,`serial` from ChargeOrder where `deal`='1' and `completeAt` between ? and ?",
       "interval": 60
     }
   },

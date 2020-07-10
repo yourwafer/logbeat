@@ -44,7 +44,7 @@ public class FileProcessService {
     }
 
     public void process(String logName, String type, ServerConfig serverConfig, List<EventConfig> eventConfigs) {
-        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService::push);
+        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService.getEventPush(systemConfig.getPushType()));
 
         String logKey = LogPosition.toKey(serverConfig.getOperator(), serverConfig.getServer(), logName);
 

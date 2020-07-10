@@ -26,6 +26,9 @@ public class SystemConfig {
     // 日志文件路径
     private LogFileConfig logSource;
 
+    //日志输出类型
+    private String pushType;
+
     public LocalDate getStart() {
         if (start != null) {
             return start;

@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 @Slf4j
 public class LogEventDataConsumer {
@@ -52,6 +51,8 @@ public class LogEventDataConsumer {
             }
             if (name.startsWith("#")) {
                 values.put(name, value);
+            } else if (name.startsWith("${")) {
+                properties.put(getRealName(name, cols), value);
             } else {
                 properties.put(name, value);
             }
@@ -60,5 +61,11 @@ public class LogEventDataConsumer {
             values.put("properties", properties);
         }
         return values;
+    }
+
+    private String getRealName(String name, String[] cols) {
+        String index = name.substring(name.indexOf("{"), name.indexOf("}") - 1);
+        Integer indexValue = Integer.valueOf(index);
+        return cols[indexValue];
     }
 }

@@ -19,6 +19,13 @@ xa:
     eventPush:
       serverUrl:
       appId:
+    errorUploader:
+      #上传类型
+      type: email
+      #当前名
+      name: 数数-数据上报
+      #需要通知的管理员账号 多个账号用;分割
+      managers: 3285288262@qq.com;419161216@qq.com
 spring:
   application:
     name: shushu-upload
@@ -45,3 +52,9 @@ spring:
       validationTimeout: 3000
       maxLifetime: 60000
       register-mbeans: true
+  mail:
+    host: smtp.qq.com
+    username: 419161216@qq.com
+    default-encoding: utf-8
+    password: kcitsribflckbhae
+

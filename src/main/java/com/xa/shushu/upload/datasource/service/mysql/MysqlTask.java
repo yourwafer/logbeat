@@ -78,16 +78,33 @@ public class MysqlTask {
             return;
         }
         while (mysqlPosition.getExecuteTime().isBefore(LocalDateTime.now())) {
+            if (!running) {
+                return;
+            }
             // 修复查询时间段，对于初次查询订单，直接查询开始到现在的订单数据，对于停服超过几个小时，则直接查询上次到现在时间之间的数据
             // 默认时间大概3到5分钟，那么初次将会查询太多次，导致mysql通信频繁
             LocalDateTime now = LocalDateTime.now();
-            // 精确度到分钟
-            LocalDateTime end = LocalDateTime.of(now.toLocalDate(), LocalTime.of(now.getHour(), now.getMinute()));
+            // 精确度到分钟,查询现在一分钟以前的数据
+            LocalDateTime end = LocalDateTime.of(now.toLocalDate(), LocalTime.of(now.getHour(), now.getMinute())).plusMinutes(-1);
+
+            // 逻辑上不可能，但还是做个兼容
+            if (end.isBefore(mysqlPosition.getStart())) {
+                mysqlPosition.setExecuteTime(mysqlPosition.getExecuteTime().plusMinutes(1));
+                save.accept(mysqlPosition);
+                return;
+            }
+
             LocalDateTime executeTime = end.plusMinutes(mysqlConfig.getInterval());
             mysqlPosition.updateExecute(mysqlPosition.getStart(), end, executeTime);
             save.accept(mysqlPosition);
 
+            if (!running) {
+                return;
+            }
             List<String[]> list = SqlExecutor.list(connection, mysqlConfig.getSql(), mysqlPosition.getStart(), mysqlPosition.getEnd());
+            if (!running) {
+                return;
+            }
             for (String[] row : list) {
                 logEventDataConsumer.consume(row);
             }
@@ -97,6 +114,14 @@ public class MysqlTask {
             executeTime = end.plusMinutes(mysqlConfig.getInterval());
             mysqlPosition.updateExecute(start, end, executeTime);
             save.accept(mysqlPosition);
+            if (!running) {
+                return;
+            }
         }
+    }
+
+    public void close() {
+        this.running = false;
+        log.info("mysql任务终止[{}]", mysqlPosition);
     }
 }

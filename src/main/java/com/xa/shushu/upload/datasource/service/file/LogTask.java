@@ -248,5 +248,6 @@ public class LogTask {
 
     public void shutdown() {
         this.running = false;
+        log.info("日志任务终止[{}]", logPosition);
     }
 }

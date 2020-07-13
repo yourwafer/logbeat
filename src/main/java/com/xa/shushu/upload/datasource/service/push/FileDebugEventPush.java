@@ -14,13 +14,13 @@ import java.util.Map;
 
 @Slf4j
 public class FileDebugEventPush implements EventPush {
-    @Value("${ca.config.eventPush.filePath:.}")
+    @Value("${xa.config.eventPush.filePath:.}")
     private String filePath;
 
     @Override
     public void push(EventConfig eventConfig, Map<String, Object> values) {
-        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
-        try (FileOutputStream outputStream = new FileOutputStream(getFileName())) {
+        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT) + "\r\n";
+        try (FileOutputStream outputStream = new FileOutputStream(getFileName(), true)) {
             outputStream.write(data.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             log.error("文件读取/写入异常", e);

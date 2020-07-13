@@ -76,7 +76,7 @@ public class FileProcessService {
                 .add(type);
 
         String timeFormat = time.format(DateTimeFormatter.ISO_LOCAL_DATE);
-        joiner.add(timeFormat).add(operator + "_" + server + "_" + log + "." + timeFormat);
+        joiner.add(operator + "_" + server + "_" + log + "." + timeFormat);
 
         return joiner.toString();
     }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.service.push.EventPush;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.core.util.JsonUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,13 @@ public class LogEventDataConsumer {
 
     public void consume(String[] cols) {
         for (EventConfig eventConfig : eventConfigs) {
-            Map<String, Object> values = parse(eventConfig, cols);
+            Map<String, Object> values;
+            try {
+                values = parse(eventConfig, cols);
+            } catch (Exception e) {
+                log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
+                throw new RuntimeException(e);
+            }
             eventPush.push(eventConfig, values);
         }
     }
@@ -48,10 +55,11 @@ public class LogEventDataConsumer {
             }
             Class<?> type = types.getOrDefault(name, String.class);
             Object value;
+            String strValue = cols[index - 1];
             if (type == String.class) {
-                value = cols[index];
+                value = strValue;
             } else {
-                value = JSON.parseObject(cols[index], type);
+                value = JSON.parseObject(strValue, type);
             }
             if (name.startsWith("#")) {
                 values.put(name, value);

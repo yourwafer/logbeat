@@ -53,7 +53,7 @@ public class SqlExecutorTest {
         String sql = "select id,`create` from log where `create` >= ? and `create` < ?";
         LocalDateTime end = start.plusDays(1);
         for (; start.isBefore(end); start = start.plusMinutes(1)) {
-            List<Object[]> list = SqlExecutor.list(connection, sql, start, start.plusMinutes(1));
+            List<String[]> list = SqlExecutor.list(connection, sql, start, start.plusMinutes(1));
             assertThat(list.size(), CoreMatchers.is(1));
         }
     }

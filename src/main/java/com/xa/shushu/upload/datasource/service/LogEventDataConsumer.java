@@ -1,4 +1,4 @@
-package com.xa.shushu.upload.datasource.service.file;
+package com.xa.shushu.upload.datasource.service;
 
 import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
@@ -12,9 +12,9 @@ import java.util.Map;
 @Slf4j
 public class LogEventDataConsumer {
 
-    private List<EventConfig> eventConfigs;
+    private final List<EventConfig> eventConfigs;
 
-    private EventPush eventPush;
+    private final EventPush eventPush;
 
     public LogEventDataConsumer(List<EventConfig> eventConfigs, EventPush eventPush) {
         this.eventConfigs = eventConfigs;
@@ -24,6 +24,10 @@ public class LogEventDataConsumer {
     public void consume(String line) {
         log.debug("解析行数据[{}]", line);
         String[] cols = line.split("\t");
+        consume(cols);
+    }
+
+    public void consume(String[] cols) {
         for (EventConfig eventConfig : eventConfigs) {
             Map<String, Object> values = parse(eventConfig, cols);
             eventPush.push(eventConfig, values);
@@ -65,7 +69,7 @@ public class LogEventDataConsumer {
 
     private String getRealName(String name, String[] cols) {
         String index = name.substring(name.indexOf("{"), name.indexOf("}") - 1);
-        Integer indexValue = Integer.valueOf(index);
+        int indexValue = Integer.parseInt(index);
         return cols[indexValue];
     }
 }

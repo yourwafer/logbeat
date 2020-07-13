@@ -15,7 +15,7 @@ public class MysqlConfig {
     // 查询sql
     private String sql;
 
-    // 查询间隔（秒）
+    // 查询间隔（分钟）
     private int interval;
 
     // 参数个数，默认日期开始时间和当前时间

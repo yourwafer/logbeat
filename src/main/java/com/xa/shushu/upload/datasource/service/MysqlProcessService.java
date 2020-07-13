@@ -8,29 +8,33 @@ import com.xa.shushu.upload.datasource.entity.MysqlPosition;
 import com.xa.shushu.upload.datasource.repository.MysqlPositionRepository;
 import com.xa.shushu.upload.datasource.service.mysql.MysqlTask;
 import com.xa.shushu.upload.datasource.service.mysql.SqlExecutor;
+import com.xa.shushu.upload.datasource.utils.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class MysqlProcessService {
 
-    private SystemConfig systemConfig;
+    private final SystemConfig systemConfig;
     private final MysqlPositionRepository mysqlPositionRepository;
+    private final EventPublishService eventPublishService;
 
-    private final Map<String, MysqlTask> tasks = new HashMap<>();
+    private final Map<String, List<MysqlTask>> tasks = new HashMap<>();
 
-    public MysqlProcessService(SystemConfig systemConfig, MysqlPositionRepository mysqlPositionRepository) {
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("mysql查询线程"));
+
+    public MysqlProcessService(SystemConfig systemConfig, MysqlPositionRepository mysqlPositionRepository, EventPublishService eventPublishService) {
         this.systemConfig = systemConfig;
         this.mysqlPositionRepository = mysqlPositionRepository;
+        this.eventPublishService = eventPublishService;
     }
 
     public void process(ServerConfig serverConfig, MysqlConfig mysqlConfig, List<EventConfig> eventConfigs) {
@@ -39,22 +43,41 @@ public class MysqlProcessService {
         String key = operator + server + mysqlConfig.getName();
         Optional<MysqlPosition> optional = mysqlPositionRepository.findById(key);
         MysqlPosition mysqlPosition = optional.orElseGet(() -> {
-            try (Connection connection = buildConnect(operator, server)) {
-                LocalDateTime startTime = SqlExecutor.getStartTime(connection);
-
-            } catch (SQLException throwables) {
-                log.error("创建mysql查询异常[{}][{}]", serverConfig, mysqlConfig, throwables);
-                throw new RuntimeException(throwables);
-            }
-            return null;
+            MysqlPosition position = MysqlPosition.of(operator, server, mysqlConfig.getName());
+            mysqlPositionRepository.save(position);
+            return position;
         });
-        MysqlTask task = new MysqlTask(serverConfig, mysqlConfig);
+
+        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService.getEventPush(systemConfig.getPushType()));
+        MysqlTask task = new MysqlTask(mysqlPosition,
+                mysqlConfig,
+                (this::buildConnect),
+                mysqlPositionRepository::save,
+                logEventDataConsumer);
+
+        List<MysqlTask> logTasks = this.tasks.computeIfAbsent(mysqlConfig.getName(), k -> new ArrayList<>());
+        logTasks.add(task);
+
         task.start();
+
+        Runnable command = () -> {
+            try {
+                task.start();
+            } catch (Exception e) {
+                log.error("执行mysql数据查询错误[{}]", mysqlPosition, e);
+            }
+        };
+        scheduledExecutorService.scheduleAtFixedRate(command, 0, mysqlConfig.getInterval(), TimeUnit.MINUTES);
     }
 
-    private Connection buildConnect(int operator, int server) throws SQLException {
+    private Connection buildConnect(int operator, int server) {
         String databaseName = buildDatabaseName(operator, server);
-        return SqlExecutor.connect(databaseName, systemConfig.getDatabase().getUserName(), systemConfig.getDatabase().getPassword());
+        try {
+            return SqlExecutor.connect(databaseName, systemConfig.getDatabase().getUserName(), systemConfig.getDatabase().getPassword());
+        } catch (SQLException throwables) {
+            log.error("建立数据库连接失败[{}]", databaseName, throwables);
+            throw new RuntimeException(throwables);
+        }
     }
 
     private String buildDatabaseName(int operator, int server) {

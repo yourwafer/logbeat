@@ -6,7 +6,6 @@ import com.xa.shushu.upload.datasource.config.ServerConfig;
 import com.xa.shushu.upload.datasource.config.SystemConfig;
 import com.xa.shushu.upload.datasource.entity.LogPosition;
 import com.xa.shushu.upload.datasource.repository.LogPositionRepository;
-import com.xa.shushu.upload.datasource.service.file.LogEventDataConsumer;
 import com.xa.shushu.upload.datasource.service.file.LogTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

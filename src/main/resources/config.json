@@ -1,31 +1,38 @@
 {
   "mysqlSources": {
     "charge-query": {
-      "sql": "SELECT `target`,`completeAt`,`createIP`,`completeIP`,`goods`,`money`,`orderId`,`serial` from ChargeOrder where `deal`='1' and `completeAt` >= ? and `completeAt` < ?",
+      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial from ChargeOrder,Account where ChargeOrder.deal='1' and Account.id = ChargeOrder.target;",
       "interval": 60
     }
   },
   "events": [
     {
-      "name": "login_record",
-      "describe": "登录事件",
+      "name": "charge_record",
+      "describe": "充值事件",
       "source": {
-        "type": "tlog",
-        "name": "LogRecord"
+        "type": "mysql",
+        "name": "charge-query"
       },
       "uploadType": "track",
       "fields": {
-        "#account_id": 1,
-        "#ip": 2,
-        "#time": 3,
-        "#screen_height": 4,
-        "loginDay": 5
+        "server": 1,
+        "operator": 2,
+        "#account_id": 3,
+        "#time": 4,
+        "goodsId": 5,
+        "money": 6,
+        "orderId": 7,
+        "serial": 8
       },
       "type": {
-        "#time": "time",
-        "#screen_height": "int",
-        "#money": "float",
-        "loginDay": "time"
+        "server": "java.lang.Integer",
+        "operator": "java.lang.Integer",
+        "#account_id": "java.lang.String",
+        "#time": "java.util.Date",
+        "goodsId": "java.lang.String",
+        "money": "java.lang.Integer",
+        "orderId": "java.lang.String",
+        "serial": "java.lang.Long"
       },
       "defaultValue": {
         "game": "djx"

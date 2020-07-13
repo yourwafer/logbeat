@@ -15,7 +15,7 @@ xa:
     database:
       user-name: root
       password: root
-      nameprefix: mhyx_
+      nameprefix:
     eventPush:
       serverUrl:
       appId:

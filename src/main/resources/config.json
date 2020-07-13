@@ -1,8 +1,8 @@
 {
   "mysqlSources": {
     "charge-query": {
-      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial from ChargeOrder,Account where ChargeOrder.deal='1' and Account.id = ChargeOrder.target;",
-      "interval": 60
+      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial from ChargeOrder,Account where ChargeOrder.deal='1' and Account.id = ChargeOrder.target and ChargeOrder.`completeAt` >= ? and ChargeOrder.`completeAt` < ?",
+      "interval": 5
     }
   },
   "events": [

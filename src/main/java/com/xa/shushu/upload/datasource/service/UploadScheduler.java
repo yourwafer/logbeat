@@ -69,7 +69,7 @@ public class UploadScheduler {
     }
 
     private void startScheduler() {
-        startLogScheduler();
+//        startLogScheduler();
         startMysqlScheduler();
     }
 

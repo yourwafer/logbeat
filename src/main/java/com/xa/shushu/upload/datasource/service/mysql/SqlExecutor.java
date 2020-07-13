@@ -27,7 +27,7 @@ public class SqlExecutor {
         if (!next) {
             return null;
         }
-        Timestamp timestamp = resultSet.getTimestamp(0);
+        Timestamp timestamp = resultSet.getTimestamp(1);
         return LocalDateTime.ofInstant(timestamp.toInstant(), ZoneId.systemDefault());
     }
 

@@ -40,7 +40,7 @@ public class MysqlProcessService {
     public void process(ServerConfig serverConfig, MysqlConfig mysqlConfig, List<EventConfig> eventConfigs) {
         int operator = serverConfig.getOperator();
         int server = serverConfig.getServer();
-        String key = operator + server + mysqlConfig.getName();
+        String key = operator +"_" + server + "_" + mysqlConfig.getName();
         Optional<MysqlPosition> optional = mysqlPositionRepository.findById(key);
         MysqlPosition mysqlPosition = optional.orElseGet(() -> {
             MysqlPosition position = MysqlPosition.of(operator, server, mysqlConfig.getName());
@@ -81,6 +81,6 @@ public class MysqlProcessService {
     }
 
     private String buildDatabaseName(int operator, int server) {
-        return systemConfig.getDatabase().getNamePrefix() + "_" + operator + "_" + server;
+        return systemConfig.getDatabase().getNamePrefix() + operator + "_" + server;
     }
 }

@@ -3,7 +3,6 @@ package com.xa.shushu.upload.datasource.service.push;
 import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.service.EventPublishService;
-import com.xa.shushu.upload.datasource.service.EventPush;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -20,20 +19,12 @@ public class FileDebugEventPush implements EventPush {
 
     @Override
     public void push(EventConfig eventConfig, Map<String, Object> values) {
-        String data = JSON.toJSONStringWithDateFormat(values, EventPublishService.DEFAULT_DATE_FORMAT);
-        FileOutputStream outputStream = null;
-        try {
-            outputStream = new FileOutputStream(getFileName());
+        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
+        try (FileOutputStream outputStream = new FileOutputStream(getFileName())) {
             outputStream.write(data.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             log.error("文件读取/写入异常", e);
-            throw new RuntimeException();
-        } finally {
-            try {
-                outputStream.close();
-            } catch (IOException e) {
-                //不处理
-            }
+            throw new RuntimeException(e);
         }
     }
 

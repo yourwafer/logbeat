@@ -1,9 +1,13 @@
 xa:
   config:
-    config-path: classpath:config-demo.json
+    config-path: classpath:config.json
     server-list-file: classpath:serverlist
     startDay: 2019-11-14
-    pushType: FILE
+    pushType:
+      console: true
+      fileDebug: false
+      file: false
+      http: false
     logSource:
       rootDirs: /Users/weiwei/Documents/program/program-data
       logDir: 14-20

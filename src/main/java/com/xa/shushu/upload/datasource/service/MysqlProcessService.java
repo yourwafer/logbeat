@@ -48,7 +48,7 @@ public class MysqlProcessService {
             return position;
         });
 
-        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService.getEventPush(systemConfig.getPushType()));
+        LogEventDataConsumer logEventDataConsumer = new LogEventDataConsumer(eventConfigs, eventPublishService.get());
         MysqlTask task = new MysqlTask(mysqlPosition,
                 mysqlConfig,
                 (this::buildConnect),

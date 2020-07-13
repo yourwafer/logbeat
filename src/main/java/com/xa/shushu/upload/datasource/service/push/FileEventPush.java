@@ -3,7 +3,6 @@ package com.xa.shushu.upload.datasource.service.push;
 import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.service.EventPublishService;
-import com.xa.shushu.upload.datasource.service.EventPush;
 import com.xa.shushu.upload.datasource.service.push.utils.LoggerFileWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +39,7 @@ public class FileEventPush implements EventPush {
 
     @Override
     public void push(EventConfig eventConfig, Map<String, Object> values) {
-        String data = JSON.toJSONStringWithDateFormat(values, EventPublishService.DEFAULT_DATE_FORMAT);
+        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
         String file_name = getFileName();
 
         //当日期变更时 关闭之前写入的文件输出流

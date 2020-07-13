@@ -2,7 +2,7 @@ package com.xa.shushu.upload.datasource.service;
 
 import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
-import com.xa.shushu.upload.datasource.service.EventPush;
+import com.xa.shushu.upload.datasource.service.push.EventPush;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package com.xa.shushu.upload.datasource.service;
+package com.xa.shushu.upload.datasource.service.push;
 
 import com.xa.shushu.upload.datasource.config.EventConfig;
 

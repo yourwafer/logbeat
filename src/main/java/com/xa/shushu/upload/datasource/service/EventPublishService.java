@@ -1,57 +1,40 @@
 package com.xa.shushu.upload.datasource.service;
 
-import com.xa.shushu.upload.datasource.service.push.ConsoleEventPush;
-import com.xa.shushu.upload.datasource.service.push.FileDebugEventPush;
-import com.xa.shushu.upload.datasource.service.push.FileEventPush;
-import com.xa.shushu.upload.datasource.service.push.HttpEventPush;
+import com.xa.shushu.upload.datasource.config.EventConfig;
+import com.xa.shushu.upload.datasource.service.push.EventPush;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Map;
 
 @Service
 @Slf4j
-public class EventPublishService implements ApplicationContextAware {
-    public final static String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+public class EventPublishService {
 
-    private ApplicationContext applicationContext;
+    private final EventPushAdapter eventPush;
 
-    private Map<Class<? extends EventPush>, EventPush> eventPushMap = new HashMap<>();
-
-    public EventPush getEventPush(String type) {
-        type = type.toUpperCase();
-        switch (type) {
-            case "FILE_DEBUG":
-                return getOrCreateBean(FileDebugEventPush.class);
-            case "FILE":
-                return getOrCreateBean(FileEventPush.class);
-            case "CONSOLE":
-                return getOrCreateBean(ConsoleEventPush.class);
-            case "HTTP":
-                return getOrCreateBean(HttpEventPush.class);
-            default:
-                throw new IllegalStateException("unsupport type " + type);
-        }
+    public EventPublishService(Collection<EventPush> eventPushes) {
+        this.eventPush = new EventPushAdapter(eventPushes);
     }
 
-    private EventPush getOrCreateBean(Class<? extends EventPush> clazz) {
-        EventPush eventPush = eventPushMap.get(clazz);
-        if (eventPush != null) {
-            return eventPush;
-        }
-        AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
-        EventPush bean = beanFactory.createBean(clazz);
-        eventPushMap.put(clazz, bean);
-        return bean;
+    public EventPush get(){
+        return eventPush;
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+    private static class EventPushAdapter implements EventPush {
+
+        private final Collection<EventPush> eventPushes;
+
+        public EventPushAdapter(Collection<EventPush> eventPushes) {
+            this.eventPushes = eventPushes;
+        }
+
+        @Override
+        public void push(EventConfig eventConfig, Map<String, Object> values) {
+            for (EventPush eventPush : eventPushes) {
+                eventPush.push(eventConfig, values);
+            }
+        }
     }
 }

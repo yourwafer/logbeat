@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.service.push.EventPush;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.core.util.JsonUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,11 +45,19 @@ public class LogEventDataConsumer {
         Map<String, Integer> fields = eventConfig.getFields();
         Map<String, Class<?>> types = eventConfig.getTypes();
         Map<String, Object> values = new HashMap<>();
+
+        values.put("#type", eventConfig.getUploadType());
+
+        Map<String, Object> defaultValue = eventConfig.getDefaultValue();
+        if (!CollectionUtils.isEmpty(defaultValue)) {
+            values.putAll(defaultValue);
+        }
+
         Map<String, Object> properties = new HashMap<>(fields.size());
         for (Map.Entry<String, Integer> entry : fields.entrySet()) {
             String name = entry.getKey();
             Integer index = entry.getValue();
-            if (index >= cols.length) {
+            if (index > cols.length) {
                 log.debug("日志[{}]列[{}]下标[{}]大约最大值[{}]", eventConfig.getName(), name, index, cols.length);
                 continue;
             }
@@ -69,15 +77,17 @@ public class LogEventDataConsumer {
                 properties.put(name, value);
             }
         }
+
         if (!properties.isEmpty()) {
             values.put("properties", properties);
         }
+
         return values;
     }
 
     private String getRealName(String name, String[] cols) {
-        String index = name.substring(name.indexOf("{"), name.indexOf("}") - 1);
+        String index = name.substring(name.indexOf("{") + 1, name.indexOf("}"));
         int indexValue = Integer.parseInt(index);
-        return cols[indexValue];
+        return cols[indexValue - 1];
     }
 }

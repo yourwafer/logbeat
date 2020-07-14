@@ -62,7 +62,7 @@ public class EventConfigExcel {
         //设置当前事件名
         config.setEventSourceOnce(setting.getLogType(), setting.getRecordName());
         //设置数数后台处理类型
-        config.setUploadType(setting.getType());
+        config.setUploadType(setting.getSsType());
         //当为track类型时 设置event_name属性
         if (StringUtils.equals("track", setting.getSsType())) {
             if (setting.getEventName() == null) {

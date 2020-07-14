@@ -58,7 +58,7 @@ public class LogEventDataConsumer {
         String channelId;
         if (userIdChannel.length >= 2) {
             channelId = userIdChannel[1];
-        }else{
+        } else {
             channelId = "115076";
         }
         //noinspection unchecked

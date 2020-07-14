@@ -55,7 +55,7 @@ public class UploadScheduler {
             map.put(event.toUniqueName(), event);
         }
         uploadConfig.setEvents(new ArrayList<>(map.values()));
-
+        System.out.println(JSON.toJSONString(uploadConfig.getEvents()));
         // 初始化游戏服配置
         initServerConfig();
 
@@ -65,7 +65,7 @@ public class UploadScheduler {
         eventProcessService.init(systemConfig, this.serverConfigs);
 
         // 开始调度任务
-        startScheduler();
+//        startScheduler();
     }
 
     private void startScheduler() {

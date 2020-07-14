@@ -33,12 +33,38 @@ public class LogEventDataConsumer {
             Map<String, Object> values;
             try {
                 values = parse(eventConfig, cols);
+
+                processDefaultProperties(values);
             } catch (Exception e) {
                 log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
                 throw new RuntimeException(e);
             }
             eventPush.push(eventConfig, values);
         }
+    }
+
+    private void processDefaultProperties(Map<String, Object> values) {
+        String account = (String) values.get("#account_id");
+        if (account == null) {
+            return;
+        }
+        account = account.trim();
+        int index = account.indexOf(".");
+        if (index >= 0) {
+            account = account.substring(0, index);
+        }
+        String[] userIdChannel = account.split("_");
+        String userId = userIdChannel[0];
+        String channelId;
+        if (userIdChannel.length >= 2) {
+            channelId = userIdChannel[1];
+        }else{
+            channelId = "115076";
+        }
+        //noinspection unchecked
+        Map<String, Object> properties = (Map<String, Object>) values.computeIfAbsent("properties", k -> new HashMap<>());
+        properties.put("channel", channelId);
+        properties.put("userId", userId);
     }
 
     private Map<String, Object> parse(EventConfig eventConfig, String[] cols) {

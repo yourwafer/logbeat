@@ -4,8 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.Field;
 import com.xa.shushu.upload.datasource.service.push.EventPush;
+import com.xa.shushu.upload.datasource.service.push.PushConfiguration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,24 +24,31 @@ public class LogEventDataConsumer {
         this.eventPush = eventPush;
     }
 
-    public void consume(String line) {
-        log.debug("解析行数据[{}]", line);
-        String[] cols = line.split("\t");
-        consume(cols);
+    public void consumeList(List<String> lines) {
+        log.trace("解析行数据[{}]", lines);
+        List<String[]> coles = new ArrayList<>(lines.size());
+        for(String line:lines) {
+            String[] cols = line.split("\t");
+            coles.add(cols);
+        }
+        consumeArray(coles);
     }
 
-    public void consume(String[] cols) {
+    public void consumeArray(List<String[]> colArray) {
         for (EventConfig eventConfig : eventConfigs) {
-            Map<String, Object> values;
-            try {
-                values = parse(eventConfig, cols);
-
-                processDefaultProperties(eventConfig, values);
-            } catch (Exception e) {
-                log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
-                throw new RuntimeException(e);
+            List<String> rows = new ArrayList<>(colArray.size());
+            for(String[] cols:colArray) {
+                Map<String, Object> values;
+                try {
+                    values = parse(eventConfig, cols);
+                    processDefaultProperties(eventConfig, values);
+                } catch (Exception e) {
+                    log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
+                    throw new RuntimeException(e);
+                }
+                rows.add(JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT));
             }
-            eventPush.push(eventConfig, values);
+            eventPush.push(eventConfig, rows);
         }
     }
 

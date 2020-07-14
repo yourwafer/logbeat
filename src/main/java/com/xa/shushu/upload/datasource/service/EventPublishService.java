@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -18,7 +18,7 @@ public class EventPublishService {
         this.eventPush = new EventPushAdapter(eventPushes);
     }
 
-    public EventPush get(){
+    public EventPush get() {
         return eventPush;
     }
 
@@ -31,7 +31,7 @@ public class EventPublishService {
         }
 
         @Override
-        public void push(EventConfig eventConfig, Map<String, Object> values) {
+        public void push(EventConfig eventConfig, List<String> values) {
             for (EventPush eventPush : eventPushes) {
                 eventPush.push(eventConfig, values);
             }

@@ -56,7 +56,7 @@ public class FileProcessService {
         });
 
         LogTask logTask = new LogTask(logPosition,
-                logEventDataConsumer::consume,
+                logEventDataConsumer::consumeList,
                 logPositionRepository::save,
                 this::buildFilePath);
 
@@ -101,6 +101,7 @@ public class FileProcessService {
                 execute();
             }
         });
+        readThread.setName("日志扫描任务");
         readThread.start();
     }
 

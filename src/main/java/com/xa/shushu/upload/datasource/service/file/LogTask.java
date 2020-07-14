@@ -10,7 +10,10 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -23,7 +26,7 @@ public class LogTask {
     private final LogPosition logPosition;
 
     // 每读取一行数据通知消费
-    private final Consumer<String> lineConsumer;
+    private final Consumer<List<String>> lineConsumer;
 
     // 日期读取记录变更通知
     private final Consumer<LogPosition> save;
@@ -46,7 +49,7 @@ public class LogTask {
     private static final byte R = 13;
 
     public LogTask(LogPosition logPosition,
-                   Consumer<String> lineConsumer,
+                   Consumer<List<String>> lineConsumer,
                    Consumer<LogPosition> save,
                    LogPathBuilder pathBuilder) {
         this.logPosition = logPosition;
@@ -108,6 +111,9 @@ public class LogTask {
                 }
                 int start = 0;
                 int cur;
+
+                long newPosition = logPosition.getPosition();
+                List<String> lines = new ArrayList<>();
                 for (int i = 0; i < read; ++i) {
                     byte b = buffer[i];
                     // \n\r
@@ -139,7 +145,7 @@ public class LogTask {
 
                     start = i + 1;
 
-                    lineConsumer.accept(line);
+                    lines.add(line);
 
                     int newPos = start;
                     if ((i + 1) < read) {
@@ -148,15 +154,19 @@ public class LogTask {
                         }
                     }
 
-                    logPosition.setPosition(curFilePosition + newPos);
-                    log.trace("变更文件位置[{}][{}]", logPosition.getPosition(), filePath);
-                    save.accept(logPosition);
+                    newPosition = curFilePosition + newPos;
 
                     if (!running) {
                         log.info("任务终止[" + this + "]");
                         return;
                     }
                 }
+
+                lineConsumer.accept(lines);
+
+                logPosition.setPosition(newPosition);
+                log.trace("变更文件位置[{}][{}]", logPosition.getPosition(), filePath);
+                save.accept(logPosition);
 
                 if (start < read) {
                     byteBuffer.put(buffer, start, read - start);
@@ -169,7 +179,7 @@ public class LogTask {
                 byteBuffer.get(remainBytes);
                 String line = new String(remainBytes, StandardCharsets.UTF_8);
                 log.info("[{}]日志文件[{}]最后一行[{}]没有换行符", filePath, remaining, line);
-                lineConsumer.accept(line);
+                lineConsumer.accept(Collections.singletonList(line));
             }
         }
     }

@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -45,7 +46,7 @@ public class HttpEventPush implements EventPush {
     }
 
     @Override
-    public void push(EventConfig eventConfig, Map<String, Object> values) {
+    public void push(EventConfig eventConfig, List<String> values) {
         String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
         try {
             httpService.send(data);

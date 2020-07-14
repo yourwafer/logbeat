@@ -37,10 +37,12 @@ public class LogTaskTest {
     public void test_single_buffer() {
         append(1024);
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", LocalDate.now(), 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            int rowNum = Integer.parseInt(row.split("\t")[0]);
-            String remove = rows.remove(rowNum);
-            assertEquals(remove, row);
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                int rowNum = Integer.parseInt(row.split("\t")[0]);
+                String remove = rows.remove(rowNum);
+                assertEquals(remove, row);
+            }
         }, l -> {
         }, this::buildFilePath);
 
@@ -62,14 +64,11 @@ public class LogTaskTest {
     public void test_big_buffer() {
         append(1024 * 10);
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", LocalDate.now(), 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            String s = row.split("\t")[0];
-            try {
-                int rowNum = Integer.parseInt(s);
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                int rowNum = Integer.parseInt(row.split("\t")[0]);
                 String remove = rows.remove(rowNum);
                 assertEquals(remove, row);
-            } catch (Exception e) {
-                System.out.println("error");
             }
         }, l -> {
         }, this::buildFilePath);
@@ -85,11 +84,12 @@ public class LogTaskTest {
     public void test_big_buffer_append_file() {
         append(1024 * 10);
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", LocalDate.now(), 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            String s = row.split("\t")[0];
-            int rowNum = Integer.parseInt(s);
-            String remove = rows.remove(rowNum);
-            assertEquals(remove, row);
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                int rowNum = Integer.parseInt(row.split("\t")[0]);
+                String remove = rows.remove(rowNum);
+                assertEquals(remove, row);
+            }
         }, l -> {
         }, this::buildFilePath);
 
@@ -112,15 +112,12 @@ public class LogTaskTest {
         AtomicBoolean consumerError = new AtomicBoolean(true);
         int lineNum = 100;
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", LocalDate.now(), 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            String s = row.split("\t")[0];
-            int rowNum = Integer.parseInt(s);
-            if (lineNum == rowNum && consumerError.get()) {
-                consumerError.set(false);
-                throw new IllegalStateException("100行异常");
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                int rowNum = Integer.parseInt(row.split("\t")[0]);
+                String remove = rows.remove(rowNum);
+                assertEquals(remove, row);
             }
-            String remove = rows.remove(rowNum);
-            assertEquals(remove, row);
         }, l -> {
         }, this::buildFilePath);
 
@@ -152,20 +149,22 @@ public class LogTaskTest {
         append(1024 * 8, beforeTwoPath, beforeTwoRows);
 
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", beforeTwoDay, 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            System.out.println(logPosition.getLastExecute() + "***" + row + "***");
-            String s = row.split("\t")[0];
-            int rowNum = Integer.parseInt(s);
-            LocalDate current = logPosition.getLastExecute();
-            String remove;
-            if (current.equals(beforeTwoDay)) {
-                remove = beforeTwoRows.remove(rowNum);
-            } else if (current.equals(beforeOneDay)) {
-                remove = beforeOneRows.remove(rowNum);
-            } else {
-                remove = rows.remove(rowNum);
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                System.out.println(logPosition.getLastExecute() + "***" + row + "***");
+                String s = row.split("\t")[0];
+                int rowNum = Integer.parseInt(s);
+                LocalDate current = logPosition.getLastExecute();
+                String remove;
+                if (current.equals(beforeTwoDay)) {
+                    remove = beforeTwoRows.remove(rowNum);
+                } else if (current.equals(beforeOneDay)) {
+                    remove = beforeOneRows.remove(rowNum);
+                } else {
+                    remove = rows.remove(rowNum);
+                }
+                assertEquals(remove, row);
             }
-            assertEquals(remove, row);
         }, l -> {
         }, this::buildFilePath);
         logTask.start();
@@ -195,19 +194,21 @@ public class LogTaskTest {
         appendNoRN(beforeTwoPath, beforeTwoRows);
 
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", beforeTwoDay, 0);
-        LogTask logTask = new LogTask(logPosition, row -> {
-            String s = row.split("\t")[0];
-            int rowNum = Integer.parseInt(s);
-            LocalDate current = logPosition.getLastExecute();
-            String remove;
-            if (current.equals(beforeTwoDay)) {
-                remove = beforeTwoRows.remove(rowNum);
-            } else if (current.equals(beforeOneDay)) {
-                remove = beforeOneRows.remove(rowNum);
-            } else {
-                remove = rows.remove(rowNum);
+        LogTask logTask = new LogTask(logPosition, rows -> {
+            for (String row : rows) {
+                String s = row.split("\t")[0];
+                int rowNum = Integer.parseInt(s);
+                LocalDate current = logPosition.getLastExecute();
+                String remove;
+                if (current.equals(beforeTwoDay)) {
+                    remove = beforeTwoRows.remove(rowNum);
+                } else if (current.equals(beforeOneDay)) {
+                    remove = beforeOneRows.remove(rowNum);
+                } else {
+                    remove = rows.remove(rowNum);
+                }
+                assertEquals(remove, row);
             }
-            assertEquals(remove, row);
         }, l -> {
         }, this::buildFilePath);
         logTask.start();

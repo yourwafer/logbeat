@@ -105,9 +105,7 @@ public class MysqlTask {
             if (!running) {
                 return;
             }
-            for (String[] row : list) {
-                logEventDataConsumer.consume(row);
-            }
+            logEventDataConsumer.consumeArray(list);
 
             LocalDateTime start = mysqlPosition.getEnd();
             end = start.plusMinutes(mysqlConfig.getInterval());

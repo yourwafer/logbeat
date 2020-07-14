@@ -20,7 +20,7 @@ public class FileDebugEventPush implements EventPush {
     @Override
     public void push(EventConfig eventConfig, Map<String, Object> values) {
         String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT) + "\r\n";
-        try (FileOutputStream outputStream = new FileOutputStream(getFileName(), true)) {
+        try (FileOutputStream outputStream = new FileOutputStream(getFileName(eventConfig.getName()), true)) {
             outputStream.write(data.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             log.error("文件读取/写入异常", e);
@@ -28,7 +28,7 @@ public class FileDebugEventPush implements EventPush {
         }
     }
 
-    private String getFileName() {
-        return filePath.endsWith(File.separator) ? filePath + "debugPush.txt" : filePath + File.separator + "debugPush.txt";
+    private String getFileName(String event) {
+        return filePath.endsWith(File.separator) ? filePath + event + "-debugPush.txt" : filePath + File.separator + event + "-debugPush.txt";
     }
 }

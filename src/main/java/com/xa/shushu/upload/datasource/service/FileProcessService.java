@@ -60,6 +60,8 @@ public class FileProcessService {
                 logPositionRepository::save,
                 this::buildFilePath);
 
+        log.info("初始化日志读取任务[{}]", logTask);
+
         logTask.start();
 
         List<LogTask> logTasks = this.logTasks.computeIfAbsent(logName, k -> new ArrayList<>());
@@ -89,7 +91,7 @@ public class FileProcessService {
         readThread = new Thread(() -> {
             while (running) {
                 try {
-                    Thread.sleep(systemConfig.getLogSource().getIntervalSecond() * 1000);
+                    Thread.sleep(Math.min(60, systemConfig.getLogSource().getIntervalSecond()) * 1000);
                 } catch (InterruptedException e) {
                     // 忽视
                     log.debug("日志读取线程被唤醒[{}]", running);

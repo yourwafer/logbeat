@@ -61,8 +61,6 @@ public class MysqlProcessService {
         List<MysqlTask> logTasks = this.tasks.computeIfAbsent(mysqlConfig.getName(), k -> new ArrayList<>());
         logTasks.add(task);
 
-        task.start();
-
         Runnable command = new Runnable() {
             @Override
             public void run() {

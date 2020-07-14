@@ -62,8 +62,6 @@ public class FileProcessService {
 
         log.info("初始化日志读取任务[{}]", logTask);
 
-        logTask.start();
-
         List<LogTask> logTasks = this.logTasks.computeIfAbsent(logName, k -> new ArrayList<>());
         logTasks.add(logTask);
     }

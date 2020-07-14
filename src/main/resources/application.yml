@@ -1,16 +1,20 @@
+server:
+  port: 8111
+  undertow:
+    worker-threads: 1
 xa:
   config:
     config-path: classpath:config.json
     server-list-file: classpath:serverlist
-    startDay: 2019-11-14
+    startDay: 2020-07-06
     pushType:
-      console: true
-      fileDebug: false
+      console: false
+      fileDebug: true
       file: false
       http: false
     logSource:
       rootDirs: /Users/weiwei/Documents/program/program-data
-      logDir: 14-20
+      logDir: logs
       intervalSecond: 300
     database:
       user-name: root
@@ -19,18 +23,11 @@ xa:
     eventPush:
       serverUrl:
       appId:
-    errorUploader:
-      #上传类型
-      type: email
-      #当前名
-      name: 数数-数据上报
-      #需要通知的管理员账号 多个账号用;分割
-      managers: 3285288262@qq.com;419161216@qq.com
 spring:
   application:
     name: shushu-upload
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate.ddl-auto: update
     properties.hibernate.dialect: org.hibernate.dialect.MySQL5InnoDBDialect
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
@@ -52,9 +49,3 @@ spring:
       validationTimeout: 3000
       maxLifetime: 60000
       register-mbeans: true
-  mail:
-    host: smtp.qq.com
-    username: 419161216@qq.com
-    default-encoding: utf-8
-    password: kcitsribflckbhae
-

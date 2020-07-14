@@ -39,7 +39,7 @@ public class LogTask {
     // 运行状态
     private volatile boolean running = true;
 
-    private final int BUF_SIZE = 1024 * 4;
+    private final int BUF_SIZE = 1024 * 16;
     private final byte[] buffer = new byte[BUF_SIZE];
 
     private static final byte N = 10;

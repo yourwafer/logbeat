@@ -2,9 +2,9 @@ package com.xa.shushu.upload.datasource.service;
 
 import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
+import com.xa.shushu.upload.datasource.config.Field;
 import com.xa.shushu.upload.datasource.service.push.EventPush;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +34,7 @@ public class LogEventDataConsumer {
             try {
                 values = parse(eventConfig, cols);
 
-                processDefaultProperties(values);
+                processDefaultProperties(eventConfig, values);
             } catch (Exception e) {
                 log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
                 throw new RuntimeException(e);
@@ -43,7 +43,16 @@ public class LogEventDataConsumer {
         }
     }
 
-    private void processDefaultProperties(Map<String, Object> values) {
+    private void processDefaultProperties(EventConfig eventConfig, Map<String, Object> values) {
+        String uploadType = eventConfig.getUploadType();
+        if ("track".equals(uploadType)) {
+            String eventName = eventConfig.getName();
+            values.put("#event_name", eventName);
+            values.put("#type", "track");
+        } else {
+            values.put("#type", uploadType);
+        }
+
         String account = (String) values.get("#account_id");
         if (account == null) {
             return;
@@ -68,26 +77,21 @@ public class LogEventDataConsumer {
     }
 
     private Map<String, Object> parse(EventConfig eventConfig, String[] cols) {
-        Map<String, Integer> fields = eventConfig.getFields();
-        Map<String, Class<?>> types = eventConfig.getTypes();
+        Map<String, Field> fields = eventConfig.getFields();
         Map<String, Object> values = new HashMap<>();
 
         values.put("#type", eventConfig.getUploadType());
 
-        Map<String, Object> defaultValue = eventConfig.getDefaultValue();
-        if (!CollectionUtils.isEmpty(defaultValue)) {
-            values.putAll(defaultValue);
-        }
-
         Map<String, Object> properties = new HashMap<>(fields.size());
-        for (Map.Entry<String, Integer> entry : fields.entrySet()) {
+        for (Map.Entry<String, Field> entry : fields.entrySet()) {
             String name = entry.getKey();
-            Integer index = entry.getValue();
+            Field field = entry.getValue();
+            int index = field.getIndex();
             if (index > cols.length) {
                 log.debug("日志[{}]列[{}]下标[{}]大约最大值[{}]", eventConfig.getName(), name, index, cols.length);
                 continue;
             }
-            Class<?> type = types.getOrDefault(name, String.class);
+            Class<?> type = field.getType();
             Object value;
             String strValue = cols[index - 1];
             if (type == String.class) {

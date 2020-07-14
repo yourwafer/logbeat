@@ -15,27 +15,38 @@
       },
       "uploadType": "track",
       "fields": {
-        "server": 1,
-        "operator": 2,
-        "#account_id": 3,
-        "#time": 4,
-        "goodsId": 5,
-        "money": 6,
-        "orderId": 7,
-        "serial": 8
-      },
-      "type": {
-        "server": "java.lang.Integer",
-        "operator": "java.lang.Integer",
-        "#account_id": "java.lang.String",
-        "#time": "java.util.Date",
-        "goodsId": "java.lang.String",
-        "money": "java.lang.Integer",
-        "orderId": "java.lang.String",
-        "serial": "java.lang.Long"
-      },
-      "defaultValue": {
-        "game": "djx"
+        "server": {
+          "index": 1,
+          "type": "java.lang.Integer"
+        },
+        "operator": {
+          "index": 2,
+          "type": "java.lang.Integer"
+        },
+        "#account_id": {
+          "index": 3,
+          "type": "java.lang.String"
+        },
+        "#time": {
+          "index": 4,
+          "type": "java.util.Date"
+        },
+        "goodsId": {
+          "index": 5,
+          "type": "java.lang.String"
+        },
+        "money": {
+          "index": 6,
+          "type": "java.lang.Integer"
+        },
+        "orderId": {
+          "index": 7,
+          "type": "java.lang.String"
+        },
+        "serial": {
+          "index": 8,
+          "type": "java.lang.Long"
+        }
       }
     }
   ]

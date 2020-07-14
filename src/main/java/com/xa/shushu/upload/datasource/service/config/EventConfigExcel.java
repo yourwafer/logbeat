@@ -1,6 +1,7 @@
 package com.xa.shushu.upload.datasource.service.config;
 
 import com.xa.shushu.upload.datasource.config.EventConfig;
+import com.xa.shushu.upload.datasource.config.Field;
 import com.xa.shushu.upload.datasource.resource.EventLogSetting;
 import com.xa.shushu.upload.datasource.resource.Storage;
 import com.xa.shushu.upload.datasource.resource.other.ResourceDefinition;
@@ -29,11 +30,9 @@ public class EventConfigExcel {
         //获取全局属性
         List<EventLogSetting> index = eventLogSettingStorage.getIndex(EventLogSetting.COMMON, true);
         //公共属性和类型
-        Map<String, Integer> commonFields = new HashMap<>();
-        Map<String, Class<?>> commonTypes = new HashMap<>();
+        Map<String, Field> commonFields = new HashMap<>();
         for (EventLogSetting setting : index) {
-            commonFields.put(setting.getName(), setting.getCsvIndex());
-            commonTypes.put(setting.getName(), setting.getClazz());
+            commonFields.put(setting.getName(), new Field(setting.getCsvIndex(), setting.getClazz()));
         }
 
         //生成Excel中的所有 EventConfig
@@ -42,7 +41,7 @@ public class EventConfigExcel {
             if (setting.isCommon()) {
                 continue;
             }
-            EventConfig config = map.computeIfAbsent(setting.toName(), (k) -> EventConfig.of(commonFields, commonTypes));
+            EventConfig config = map.computeIfAbsent(setting.toName(), (k) -> EventConfig.of(new HashMap<>(commonFields)));
             //将Excel中的配置放入EventConfig中
             dealWithEventLog(setting, config);
         }
@@ -52,23 +51,14 @@ public class EventConfigExcel {
     //将Excel中的配置放入EventConfig中
     private static void dealWithEventLog(EventLogSetting setting, EventConfig config) {
         //设置当前属性
-        config.putField(setting.getName(), setting.getCsvIndex());
-        //设置当前属性的Type类型
-        config.putType(setting.getName(), setting.getClazz());
+        config.putField(setting.getName(), setting.getCsvIndex(), setting.getClazz());
         //设置当前事件别名
         config.setDescribeOnce(setting.getRecordName());
         //设置当前事件名
-        config.setNameOnce(setting.getRecordName());
+        config.setNameOnce(setting.getEventName());
         //设置当前事件名
         config.setEventSourceOnce(setting.getLogType(), setting.getRecordName());
         //设置数数后台处理类型
         config.setUploadType(setting.getSsType());
-        //当为track类型时 设置event_name属性
-        if (StringUtils.equals("track", setting.getSsType())) {
-            if (setting.getEventName() == null) {
-                log.error("当前ID[{}]属性[{}]的事件名配置不存在 请检查！！！", setting.getId(), setting.getName());
-            }
-            config.putDefaultValueIfAbsent("#event_name", setting.getEventName());
-        }
     }
 }

@@ -1,6 +1,7 @@
 package com.xa.shushu.upload.datasource.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.xa.shushu.upload.datasource.config.*;
 import com.xa.shushu.upload.datasource.service.config.EventConfigExcel;
 import org.apache.commons.lang3.StringUtils;
@@ -47,15 +48,11 @@ public class UploadScheduler {
         Map<String, EventConfig> map = EventConfigExcel.getConfig(resource);
 
         for (EventConfig event : uploadConfig.getEvents()) {
-            EventConfig config = map.get(event.toUniqueName());
-            if (config != null) {
-                config.merge(event);
-                continue;
-            }
             map.put(event.toUniqueName(), event);
         }
         uploadConfig.setEvents(new ArrayList<>(map.values()));
-        System.out.println(JSON.toJSONString(uploadConfig.getEvents()));
+
+        System.out.println(JSON.toJSONString(uploadConfig.getEvents(), SerializerFeature.DisableCircularReferenceDetect));
         // 初始化游戏服配置
         initServerConfig();
 
@@ -65,7 +62,7 @@ public class UploadScheduler {
         eventProcessService.init(systemConfig, this.serverConfigs);
 
         // 开始调度任务
-//        startScheduler();
+        startScheduler();
     }
 
     private void startScheduler() {

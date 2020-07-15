@@ -25,9 +25,14 @@ public class HttpRequestUtil {
         cm.setMaxTotal(100);
         RequestConfig globalConfig = RequestConfig.custom()
                 .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-                .setConnectTimeout(30000)
-                .setSocketTimeout(30000).build();
-        httpClient = HttpClients.custom().setConnectionManager(cm).setDefaultRequestConfig(globalConfig).build();
+                .setConnectTimeout(10000)
+                .setConnectionRequestTimeout(30000)
+                .setSocketTimeout(10000).build();
+        httpClient = HttpClients.custom()
+                .setConnectionManager(cm)
+                .setDefaultRequestConfig(globalConfig)
+                .evictExpiredConnections()
+                .build();
     }
 
     public static CloseableHttpClient getHttpClient() {

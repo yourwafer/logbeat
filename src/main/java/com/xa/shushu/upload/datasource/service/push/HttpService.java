@@ -2,6 +2,7 @@ package com.xa.shushu.upload.datasource.service.push;
 
 import com.alibaba.fastjson.JSONObject;
 import com.xa.shushu.upload.datasource.service.push.utils.HttpRequestUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.jpountz.lz4.LZ4BlockOutputStream;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
+@Slf4j
 public class HttpService implements Closeable {
 
     private final URI serverUri;
@@ -55,7 +57,7 @@ public class HttpService implements Closeable {
         this.appId = appId;
     }
 
-    public synchronized void send(final String data) throws ServiceUnavailableException, IOException {
+    public synchronized void send(final String data) throws IOException {
         HttpPost httpPost = new HttpPost(serverUri);
         HttpEntity params = debug ? getDebugHttpEntity(data) : getBatchHttpEntity(data);
         httpPost.setEntity(params);
@@ -74,7 +76,7 @@ public class HttpService implements Closeable {
             JSONObject resultJson = JSONObject.parseObject(result);
             checkingRetCode(resultJson);
         } catch (IOException e) {
-            throw new ServiceUnavailableException("Cannot post message to " + this.serverUri);
+            throw new ServiceUnavailableException("Cannot post message to " + this.serverUri, e);
         } finally {
             httpPost.releaseConnection();
         }
@@ -161,15 +163,25 @@ public class HttpService implements Closeable {
         }
     }
 
-    class ServiceUnavailableException extends Exception {
-        ServiceUnavailableException(String message) {
+    static class ServiceUnavailableException extends RuntimeException {
+        public ServiceUnavailableException(String message) {
             super(message);
+        }
+
+        ServiceUnavailableException(String message, Throwable throwable) {
+            super(message, throwable);
         }
     }
 
     @Override
     public void close() {
-
+        if (this.httpClient != null) {
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                log.warn("关闭client失败", e);
+            }
+        }
     }
 
 }

@@ -32,7 +32,8 @@ public class MysqlProcessService {
     private final MysqlPositionRepository mysqlPositionRepository;
     private final EventPublishService eventPublishService;
 
-    private AtomicInteger error = new AtomicInteger();
+    private volatile boolean running = true;
+    private final AtomicInteger error = new AtomicInteger();
 
     private final Map<String, List<MysqlTask>> tasks = new HashMap<>();
 
@@ -68,15 +69,25 @@ public class MysqlProcessService {
         Runnable command = new Runnable() {
             @Override
             public void run() {
+                if (!running) {
+                    log.info("mysql任务队列已终止，忽视任务");
+                    return;
+                }
                 try {
                     task.start();
                     error.set(0);
+                    if (!running) {
+                        return;
+                    }
                 } catch (Exception e) {
                     int times = error.incrementAndGet();
                     log.error("[{}]执行mysql数据查询错误[{}]", times, mysqlPosition, e);
                     if (times >= 10) {
                         close();
                         log.error("错误次数大于10次，任务终止");
+                        return;
+                    }
+                    if (!running) {
                         return;
                     }
                     scheduledExecutorService.schedule(this, mysqlConfig.getInterval(), TimeUnit.MINUTES);
@@ -110,6 +121,7 @@ public class MysqlProcessService {
 
     @PreDestroy
     public void close() {
+        this.running = false;
         for (List<MysqlTask> tasks : tasks.values()) {
             for (MysqlTask task : tasks) {
                 task.close();
@@ -124,6 +136,10 @@ public class MysqlProcessService {
     }
 
     public List<MysqlPosition> getMysqls() {
-        return tasks.values().stream().flatMap(ts->ts.stream().map(MysqlTask::getMysqlPosition)).collect(Collectors.toList());
+        return tasks.values().stream().flatMap(ts -> ts.stream().map(MysqlTask::getMysqlPosition)).collect(Collectors.toList());
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }

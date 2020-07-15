@@ -153,4 +153,8 @@ public class FileProcessService {
     public List<LogPosition> getLogs() {
         return logTasks.values().stream().flatMap(tasks -> tasks.stream().map(LogTask::getLogPosition)).collect(Collectors.toList());
     }
+
+    public boolean isRunning() {
+        return running;
+    }
 }

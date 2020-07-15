@@ -36,7 +36,23 @@ public class ReportController {
     }
 
     @GetMapping("_mysqlposition")
-    public List<MysqlPosition> mysqls(){
+    public List<MysqlPosition> mysqls() {
         return mysqlProcessService.getMysqls();
+    }
+
+
+    @GetMapping("_health")
+    public boolean health() {
+        return fileProcessService.isRunning() && mysqlProcessService.isRunning();
+    }
+
+    @GetMapping("_health/file")
+    public boolean fileRunning() {
+        return fileProcessService.isRunning();
+    }
+
+    @GetMapping("_health/mysql")
+    public boolean mysqlRunning() {
+        return mysqlProcessService.isRunning();
     }
 }

@@ -14,6 +14,7 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class HttpRequestUtil {
@@ -33,6 +34,7 @@ public class HttpRequestUtil {
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(globalConfig)
                 .evictExpiredConnections()
+                .evictIdleConnections(3L, TimeUnit.MINUTES)
                 .build();
     }
 

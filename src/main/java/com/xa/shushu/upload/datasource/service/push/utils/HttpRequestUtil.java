@@ -29,6 +29,7 @@ public class HttpRequestUtil {
                 .setConnectionRequestTimeout(30000)
                 .setSocketTimeout(10000).build();
         httpClient = HttpClients.custom()
+                .disableAutomaticRetries()
                 .setConnectionManager(cm)
                 .setDefaultRequestConfig(globalConfig)
                 .evictExpiredConnections()

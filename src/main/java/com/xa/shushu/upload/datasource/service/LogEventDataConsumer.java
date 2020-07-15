@@ -56,12 +56,12 @@ public class LogEventDataConsumer {
 
     private void processDefaultProperties(EventConfig eventConfig, Map<String, Object> values) {
         String uploadType = eventConfig.getUploadType();
+        values.put("#type", uploadType);
         if ("track".equals(uploadType)) {
             String eventName = eventConfig.getName();
             values.put("#event_name", eventName);
-            values.put("#type", "track");
-        } else {
-            values.put("#type", uploadType);
+        } else if (!"user_set".equals(uploadType)) {
+            return;
         }
 
         String account = (String) values.get("#account_id");

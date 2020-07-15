@@ -1,7 +1,7 @@
 {
   "mysqlSources": {
     "charge-query": {
-      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial from ChargeOrder,Account where ChargeOrder.deal='1' and Account.id = ChargeOrder.target and ChargeOrder.`completeAt` >= ? and ChargeOrder.`completeAt` < ?",
+      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial,TIMESTAMPDIFF(SECOND,Vip.firstChargeTime,ChargeOrder.completeAt)<=10 as isFirstCharge from Account,ChargeOrder,vip where ChargeOrder.deal='1' and ChargeOrder.`completeAt` >= ? and ChargeOrder.`completeAt` < ? and ChargeOrder.target = Account.id and Vip.id = Account.id",
       "interval": 5
     }
   },
@@ -46,6 +46,33 @@
         "serial": {
           "index": 8,
           "type": "java.lang.Long"
+        },
+        "isFirstCharge": {
+          "index": 9,
+          "type": "java.lang.Boolean"
+        }
+      }
+    },
+    {
+      "name": "charge_record",
+      "describe": "充值事件-玩家属性",
+      "source": {
+        "type": "mysql",
+        "name": "charge-query"
+      },
+      "uploadType": "user_add",
+      "fields": {
+        "#account_id": {
+          "index": 3,
+          "type": "java.lang.String"
+        },
+        "#time": {
+          "index": 4,
+          "type": "java.util.Date"
+        },
+        "chargeMoney": {
+          "index": 6,
+          "type": "java.lang.Integer"
         }
       }
     }

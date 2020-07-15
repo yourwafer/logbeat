@@ -31,7 +31,7 @@ public class EventPublishService {
         }
 
         @Override
-        public void push(EventConfig eventConfig, List<String> values) {
+        public void push(EventConfig eventConfig, String values) {
             for (EventPush eventPush : eventPushes) {
                 eventPush.push(eventConfig, values);
             }

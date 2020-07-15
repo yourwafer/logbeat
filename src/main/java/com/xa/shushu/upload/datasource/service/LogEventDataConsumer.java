@@ -36,7 +36,7 @@ public class LogEventDataConsumer {
 
     public void consumeArray(List<String[]> colArray) {
         for (EventConfig eventConfig : eventConfigs) {
-            List<String> rows = new ArrayList<>(colArray.size());
+            List<Map<String, Object>> rows = new ArrayList<>(colArray.size());
             for(String[] cols:colArray) {
                 Map<String, Object> values;
                 try {
@@ -46,9 +46,9 @@ public class LogEventDataConsumer {
                     log.error("[{}]解析数据[{}]异常", eventConfig, JSON.toJSONString(cols), e);
                     throw new RuntimeException(e);
                 }
-                rows.add(JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT));
+                rows.add(values);
             }
-            eventPush.push(eventConfig, rows);
+            eventPush.push(eventConfig, JSON.toJSONStringWithDateFormat(rows, PushConfiguration.DEFAULT_DATE_FORMAT));
         }
     }
 

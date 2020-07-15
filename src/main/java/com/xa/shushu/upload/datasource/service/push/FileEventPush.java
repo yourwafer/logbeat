@@ -1,8 +1,6 @@
 package com.xa.shushu.upload.datasource.service.push;
 
-import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
-import com.xa.shushu.upload.datasource.service.EventPublishService;
 import com.xa.shushu.upload.datasource.service.push.utils.LoggerFileWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -13,8 +11,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class FileEventPush implements EventPush {
@@ -39,8 +35,7 @@ public class FileEventPush implements EventPush {
     }
 
     @Override
-    public void push(EventConfig eventConfig, List<String> values) {
-        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
+    public void push(EventConfig eventConfig, String data) {
         String file_name = getFileName();
 
         //当日期变更时 关闭之前写入的文件输出流

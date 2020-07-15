@@ -1,8 +1,6 @@
 package com.xa.shushu.upload.datasource.service.push;
 
-import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
-import com.xa.shushu.upload.datasource.service.EventPublishService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,8 +9,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class HttpEventPush implements EventPush {
@@ -46,8 +42,7 @@ public class HttpEventPush implements EventPush {
     }
 
     @Override
-    public void push(EventConfig eventConfig, List<String> values) {
-        String data = JSON.toJSONStringWithDateFormat(values, PushConfiguration.DEFAULT_DATE_FORMAT);
+    public void push(EventConfig eventConfig, String data) {
         try {
             httpService.send(data);
         } catch (HttpService.ServiceUnavailableException e) {

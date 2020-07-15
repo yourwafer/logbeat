@@ -111,6 +111,7 @@ public class MysqlTask {
             end = start.plusMinutes(mysqlConfig.getInterval());
             executeTime = end.plusMinutes(mysqlConfig.getInterval());
             mysqlPosition.updateExecute(start, end, executeTime);
+            mysqlPosition.addRow(list.size());
             save.accept(mysqlPosition);
             if (!running) {
                 return;
@@ -121,5 +122,9 @@ public class MysqlTask {
     public void close() {
         this.running = false;
         log.info("mysql任务终止[{}]", mysqlPosition);
+    }
+
+    public MysqlPosition getMysqlPosition() {
+        return mysqlPosition;
     }
 }

@@ -1,6 +1,7 @@
 package com.xa.shushu.upload.datasource.service.push;
 
 import com.xa.shushu.upload.datasource.config.EventConfig;
+import com.xa.shushu.upload.datasource.service.report.ReportUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,9 @@ public class HttpEventPush implements EventPush {
     @Override
     public void push(EventConfig eventConfig, String data) {
         try {
+            long start = System.currentTimeMillis();
             httpService.send(data);
+            ReportUtils.http(data.length(), (System.currentTimeMillis() - start));
         } catch (HttpService.ServiceUnavailableException e) {
             for (int i = 0; i < retryTimes; i++) {
                 try {

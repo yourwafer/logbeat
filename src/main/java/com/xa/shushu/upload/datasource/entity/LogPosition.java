@@ -33,6 +33,9 @@ public class LogPosition {
     // 上次读取位置
     private long position;
 
+    // 累计行数
+    private int totalRows;
+
     public static LogPosition of(int operator, int server, String log, String type, LocalDate time, int position) {
         LogPosition p = new LogPosition();
         p.id = toKey(operator, server, log);
@@ -52,5 +55,9 @@ public class LogPosition {
     public void updateTime(LocalDate lastExecute) {
         this.lastExecute = lastExecute;
         this.position = 0;
+    }
+
+    public void addRow(int size) {
+        this.totalRows += size;
     }
 }

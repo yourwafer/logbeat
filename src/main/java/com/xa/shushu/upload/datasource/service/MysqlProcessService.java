@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -112,4 +113,7 @@ public class MysqlProcessService {
         }
     }
 
+    public List<MysqlPosition> getMysqls() {
+        return tasks.values().stream().flatMap(ts->ts.stream().map(MysqlTask::getMysqlPosition)).collect(Collectors.toList());
+    }
 }

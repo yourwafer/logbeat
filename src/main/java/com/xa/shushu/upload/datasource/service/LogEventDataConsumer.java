@@ -5,6 +5,7 @@ import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.Field;
 import com.xa.shushu.upload.datasource.service.push.EventPush;
 import com.xa.shushu.upload.datasource.service.push.PushConfiguration;
+import com.xa.shushu.upload.datasource.service.report.ReportUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class LogEventDataConsumer {
     public void consumeList(List<String> lines) {
         log.trace("解析行数据[{}]", lines);
         List<String[]> coles = new ArrayList<>(lines.size());
-        for(String line:lines) {
+        for (String line : lines) {
             String[] cols = line.split("\t");
             coles.add(cols);
         }
@@ -37,7 +38,7 @@ public class LogEventDataConsumer {
     public void consumeArray(List<String[]> colArray) {
         for (EventConfig eventConfig : eventConfigs) {
             List<Map<String, Object>> rows = new ArrayList<>(colArray.size());
-            for(String[] cols:colArray) {
+            for (String[] cols : colArray) {
                 Map<String, Object> values;
                 try {
                     values = parse(eventConfig, cols);
@@ -48,6 +49,7 @@ public class LogEventDataConsumer {
                 }
                 rows.add(values);
             }
+            ReportUtils.rows(rows.size());
             eventPush.push(eventConfig, JSON.toJSONStringWithDateFormat(rows, PushConfiguration.DEFAULT_DATE_FORMAT));
         }
     }

@@ -36,6 +36,9 @@ public class MysqlPosition {
     // 执行时间
     private LocalDateTime executeTime;
 
+    // 累计行数
+    private long totalRows;
+
     public static MysqlPosition of(int operator, int server, String name) {
         MysqlPosition p = new MysqlPosition();
         p.id = toKey(operator, server, name);
@@ -53,5 +56,9 @@ public class MysqlPosition {
         this.start = start;
         this.end = end;
         this.executeTime = execute;
+    }
+
+    public void addRow(int size) {
+        this.totalRows += size;
     }
 }

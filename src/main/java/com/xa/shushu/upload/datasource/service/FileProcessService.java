@@ -15,6 +15,8 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -135,4 +137,7 @@ public class FileProcessService {
         }
     }
 
+    public List<LogPosition> getLogs() {
+        return logTasks.values().stream().flatMap(tasks -> tasks.stream().map(LogTask::getLogPosition)).collect(Collectors.toList());
+    }
 }

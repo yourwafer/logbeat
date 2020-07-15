@@ -1,6 +1,7 @@
 package com.xa.shushu.upload.datasource.service.file;
 
 import com.xa.shushu.upload.datasource.entity.LogPosition;
+import com.xa.shushu.upload.datasource.service.report.ReportUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -100,12 +101,14 @@ public class LogTask {
                 }
                 Arrays.fill(buffer, (byte) 0);
                 long curFilePosition = 0;
+                long startTime = System.nanoTime();
                 try {
                     curFilePosition = randomAccessFile.getFilePointer();
                     read = randomAccessFile.read(buffer);
                 } catch (IOException e) {
                     log.error("读取日志数据异常[{}]", filePath, e);
                 }
+                ReportUtils.readBytes(read, (System.nanoTime() - startTime));
                 if (read == -1) {
                     break;
                 }
@@ -165,6 +168,7 @@ public class LogTask {
                 lineConsumer.accept(lines);
 
                 logPosition.setPosition(newPosition);
+                logPosition.addRow(lines.size());
                 log.trace("变更文件位置[{}][{}]", logPosition.getPosition(), filePath);
                 save.accept(logPosition);
 
@@ -180,6 +184,8 @@ public class LogTask {
                 String line = new String(remainBytes, StandardCharsets.UTF_8);
                 log.info("[{}]日志文件[{}]最后一行[{}]没有换行符", filePath, remaining, line);
                 lineConsumer.accept(Collections.singletonList(line));
+                logPosition.addRow(1);
+                save.accept(logPosition);
             }
         }
     }
@@ -259,5 +265,9 @@ public class LogTask {
     public void shutdown() {
         this.running = false;
         log.info("日志任务终止[{}]", logPosition);
+    }
+
+    public LogPosition getLogPosition() {
+        return logPosition;
     }
 }

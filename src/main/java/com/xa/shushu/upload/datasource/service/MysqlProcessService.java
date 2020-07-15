@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +31,8 @@ public class MysqlProcessService {
     private final SystemConfig systemConfig;
     private final MysqlPositionRepository mysqlPositionRepository;
     private final EventPublishService eventPublishService;
+
+    private AtomicInteger error = new AtomicInteger();
 
     private final Map<String, List<MysqlTask>> tasks = new HashMap<>();
 
@@ -67,8 +70,15 @@ public class MysqlProcessService {
             public void run() {
                 try {
                     task.start();
+                    error.set(0);
                 } catch (Exception e) {
-                    log.error("执行mysql数据查询错误[{}]", mysqlPosition, e);
+                    int times = error.incrementAndGet();
+                    log.error("[{}]执行mysql数据查询错误[{}]", times, mysqlPosition, e);
+                    if (times >= 10) {
+                        close();
+                        log.error("错误次数大于10次，任务终止");
+                        return;
+                    }
                     scheduledExecutorService.schedule(this, mysqlConfig.getInterval(), TimeUnit.MINUTES);
                     return;
                 }

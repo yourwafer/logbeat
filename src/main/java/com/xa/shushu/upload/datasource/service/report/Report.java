@@ -29,4 +29,17 @@ public class Report {
 
     // 累计耗时
     int totalCost;
+
+    // 上传次数
+    int times;
+
+    // 最大耗时
+    int maxCost;
+
+    // 平均耗时
+    int avgCost;
+
+    // 最低耗时
+    int minCost = Integer.MAX_VALUE;
+
 }

@@ -70,20 +70,20 @@ public class HttpService implements Closeable {
         try (CloseableHttpResponse response = this.httpClient.execute(httpPost)) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode < 200 || statusCode > 300) {
-                throw new ServiceUnavailableException("Cannot post message to " + this.serverUri);
+                throw new ServiceUnavailableException(statusCode + "-message code error " + this.serverUri);
             }
             String result = EntityUtils.toString(response.getEntity(), "UTF-8");
             JSONObject resultJson = JSONObject.parseObject(result);
             checkingRetCode(resultJson);
         } catch (IOException e) {
-            throw new ServiceUnavailableException("Cannot post message to " + this.serverUri, e);
+            throw new ServiceUnavailableException("发送数据异常 " + this.serverUri, e);
         } finally {
             httpPost.releaseConnection();
         }
     }
 
     UrlEncodedFormEntity getDebugHttpEntity(final String data) throws IOException {
-        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+        List<NameValuePair> nameValuePairs = new ArrayList<>();
         nameValuePairs.add(new BasicNameValuePair("source", "server"));
         nameValuePairs.add(new BasicNameValuePair("appid", this.appId));
         nameValuePairs.add(new BasicNameValuePair("data", data));

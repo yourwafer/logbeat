@@ -31,6 +31,10 @@ public class ReportUtils {
     public static void http(int size, long cost) {
         INSTANCE.totalPost += size;
         INSTANCE.totalCost += cost;
+        INSTANCE.times += 1;
+        INSTANCE.avgCost = INSTANCE.totalCost / Math.max(1, INSTANCE.times);
+        INSTANCE.maxCost = (int) Math.max(cost, INSTANCE.maxCost);
+        INSTANCE.minCost = (int) Math.min(cost, INSTANCE.minCost);
     }
 
     public static Report get() {

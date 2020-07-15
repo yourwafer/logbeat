@@ -57,10 +57,11 @@ public class HttpEventPush implements EventPush {
                 }
                 return;
             }
-            throw new RuntimeException("数据上传异常");
+
+            throw new RuntimeException("数据上传异常", e);
         } catch (IOException e) {
             log.error("数据上传异常", e);
-            throw new RuntimeException("数据上传异常");
+            throw new RuntimeException("数据上传异常", e);
         }
     }
 

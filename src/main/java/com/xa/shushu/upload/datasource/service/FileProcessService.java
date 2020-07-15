@@ -1,5 +1,6 @@
 package com.xa.shushu.upload.datasource.service;
 
+import com.alibaba.fastjson.JSON;
 import com.xa.shushu.upload.datasource.config.EventConfig;
 import com.xa.shushu.upload.datasource.config.LogFileConfig;
 import com.xa.shushu.upload.datasource.config.ServerConfig;
@@ -7,6 +8,7 @@ import com.xa.shushu.upload.datasource.config.SystemConfig;
 import com.xa.shushu.upload.datasource.entity.LogPosition;
 import com.xa.shushu.upload.datasource.repository.LogPositionRepository;
 import com.xa.shushu.upload.datasource.service.file.LogTask;
+import com.xa.shushu.upload.datasource.service.report.ReportUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,6 +38,8 @@ public class FileProcessService {
     private Map<String, ServerConfig> serverConfigs;
 
     private volatile boolean running = true;
+
+    private AtomicInteger errorTimes = new AtomicInteger();
 
     private final Map<String, List<LogTask>> logTasks = new HashMap<>();
     private Thread readThread;
@@ -112,8 +117,15 @@ public class FileProcessService {
             for (LogTask logTask : tasks) {
                 try {
                     logTask.start();
+                    errorTimes.set(0);
                 } catch (Exception e) {
-                    log.error("调度日志任务[{}]异常", logTask, e);
+                    int times = errorTimes.incrementAndGet();
+                    log.error("错误次数[{}]调度日志任务[{}]异常", times, logTask, e);
+                    if (times >= 10) {
+                        close();
+                        log.error("错误次数达到10此，文件扫描任务停止");
+                        return;
+                    }
                 }
             }
         }
@@ -130,11 +142,12 @@ public class FileProcessService {
         }
         while (readThread.isAlive()) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 // wait for done
             }
         }
+        log.warn("报告[{}]", JSON.toJSONString(ReportUtils.get()));
     }
 
     public List<LogPosition> getLogs() {

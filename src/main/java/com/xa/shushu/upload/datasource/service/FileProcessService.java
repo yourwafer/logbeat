@@ -10,6 +10,7 @@ import com.xa.shushu.upload.datasource.repository.LogPositionRepository;
 import com.xa.shushu.upload.datasource.service.file.LogTask;
 import com.xa.shushu.upload.datasource.service.report.ReportUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -19,7 +20,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -37,16 +37,21 @@ public class FileProcessService {
     // 服务器配置
     private Map<String, ServerConfig> serverConfigs;
 
+    private final ConfigurableApplicationContext applicationContext;
+
     private volatile boolean running = true;
 
-    private AtomicInteger errorTimes = new AtomicInteger();
+    private final AtomicInteger errorTimes = new AtomicInteger();
 
     private final Map<String, List<LogTask>> logTasks = new HashMap<>();
     private Thread readThread;
 
-    public FileProcessService(LogPositionRepository logPositionRepository, EventPublishService eventPublishService) {
+    public FileProcessService(LogPositionRepository logPositionRepository,
+                              EventPublishService eventPublishService,
+                              ConfigurableApplicationContext applicationContext) {
         this.logPositionRepository = logPositionRepository;
         this.eventPublishService = eventPublishService;
+        this.applicationContext = applicationContext;
     }
 
     public void process(String logName, String type, ServerConfig serverConfig, List<EventConfig> eventConfigs) {
@@ -122,8 +127,8 @@ public class FileProcessService {
                     int times = errorTimes.incrementAndGet();
                     log.error("错误次数[{}]调度日志任务[{}]异常", times, logTask, e);
                     if (times >= 10) {
-                        close();
                         log.error("错误次数达到10此，文件扫描任务停止");
+                        applicationContext.close();
                         return;
                     }
                 }

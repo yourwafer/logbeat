@@ -18,7 +18,7 @@ public class ReportController {
 
     private final FileProcessService fileProcessService;
 
-    private MysqlProcessService mysqlProcessService;
+    private final MysqlProcessService mysqlProcessService;
 
     public ReportController(FileProcessService fileProcessService, MysqlProcessService mysqlProcessService) {
         this.fileProcessService = fileProcessService;

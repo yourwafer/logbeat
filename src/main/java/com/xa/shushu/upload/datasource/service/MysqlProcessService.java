@@ -10,6 +10,7 @@ import com.xa.shushu.upload.datasource.service.mysql.MysqlTask;
 import com.xa.shushu.upload.datasource.service.mysql.SqlExecutor;
 import com.xa.shushu.upload.datasource.utils.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -34,15 +35,20 @@ public class MysqlProcessService {
 
     private volatile boolean running = true;
     private final AtomicInteger error = new AtomicInteger();
+    private final ConfigurableApplicationContext applicationContext;
 
     private final Map<String, List<MysqlTask>> tasks = new HashMap<>();
 
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("mysql查询线程"));
 
-    public MysqlProcessService(SystemConfig systemConfig, MysqlPositionRepository mysqlPositionRepository, EventPublishService eventPublishService) {
+    public MysqlProcessService(SystemConfig systemConfig,
+                               MysqlPositionRepository mysqlPositionRepository,
+                               EventPublishService eventPublishService,
+                               ConfigurableApplicationContext applicationContext) {
         this.systemConfig = systemConfig;
         this.mysqlPositionRepository = mysqlPositionRepository;
         this.eventPublishService = eventPublishService;
+        this.applicationContext = applicationContext;
     }
 
     public void process(ServerConfig serverConfig, MysqlConfig mysqlConfig, List<EventConfig> eventConfigs) {
@@ -83,8 +89,8 @@ public class MysqlProcessService {
                     int times = error.incrementAndGet();
                     log.error("[{}]执行mysql数据查询错误[{}]", times, mysqlPosition, e);
                     if (times >= 10) {
-                        close();
                         log.error("错误次数大于10次，任务终止");
+                        applicationContext.close();
                         return;
                     }
                     if (!running) {

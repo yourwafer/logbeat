@@ -17,7 +17,7 @@ public class FileEventPush implements EventPush {
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-    @Value("${ca.config.eventPush.filePath:.}")
+    @Value("${xa.config.eventPush.filePath:.}")
     private String filePath;
 
     //输出的文件地址前缀

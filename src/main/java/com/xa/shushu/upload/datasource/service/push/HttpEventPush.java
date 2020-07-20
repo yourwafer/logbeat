@@ -14,13 +14,13 @@ import java.net.URISyntaxException;
 @Slf4j
 public class HttpEventPush implements EventPush {
 
-    @Value("${ca.config.eventPush.retryTimes:3}")
+    @Value("${xa.config.eventPush.retryTimes:3}")
     private Integer retryTimes = 3;
-    @Value("${ca.config.eventPush.serverUrl:}")
+    @Value("${xa.config.eventPush.serverUrl:}")
     private String serverUrl;
-    @Value("${ca.config.eventPush.appId:}")
+    @Value("${xa.config.eventPush.appId:}")
     private String appId;
-    @Value("${ca.config.eventPush.debug:false}")
+    @Value("${xa.config.eventPush.debug:false}")
     private boolean debug;
 
     //上传服务

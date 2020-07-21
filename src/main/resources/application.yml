@@ -23,8 +23,8 @@ xa:
       password: root
       nameprefix:
     eventPush:
-      serverUrl:
-      appId:
+      serverUrl: http://47.113.87.6
+      appId: d82a57122dfd42c4bb99294842604ccc
 spring:
   application:
     name: shushu-upload

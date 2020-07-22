@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 public class LogTaskTest {
 
     private Path path;
-    private Map<Integer, String> rows;
+    private Map<Integer, String> globalRows;
     private List<Path> paths = new ArrayList<>();
 
     /**
@@ -40,20 +40,20 @@ public class LogTaskTest {
         LogTask logTask = new LogTask(logPosition, rows -> {
             for (String row : rows) {
                 int rowNum = Integer.parseInt(row.split("\t")[0]);
-                String remove = rows.remove(rowNum);
+                String remove = globalRows.remove(rowNum);
                 assertEquals(remove, row);
             }
         }, l -> {
         }, this::buildFilePath);
 
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
 
         append(1024);
         logTask.close();
 
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
         logTask.close();
     }
 
@@ -67,14 +67,14 @@ public class LogTaskTest {
         LogTask logTask = new LogTask(logPosition, rows -> {
             for (String row : rows) {
                 int rowNum = Integer.parseInt(row.split("\t")[0]);
-                String remove = rows.remove(rowNum);
+                String remove = globalRows.remove(rowNum);
                 assertEquals(remove, row);
             }
         }, l -> {
         }, this::buildFilePath);
 
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
     }
 
     /**
@@ -87,7 +87,7 @@ public class LogTaskTest {
         LogTask logTask = new LogTask(logPosition, rows -> {
             for (String row : rows) {
                 int rowNum = Integer.parseInt(row.split("\t")[0]);
-                String remove = rows.remove(rowNum);
+                String remove = globalRows.remove(rowNum);
                 assertEquals(remove, row);
             }
         }, l -> {
@@ -95,12 +95,12 @@ public class LogTaskTest {
 
         logTask.start();
         logTask.close();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
 
         append(1024 * 10);
 
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
     }
 
     /**
@@ -115,7 +115,7 @@ public class LogTaskTest {
         LogTask logTask = new LogTask(logPosition, rows -> {
             for (String row : rows) {
                 int rowNum = Integer.parseInt(row.split("\t")[0]);
-                String remove = rows.remove(rowNum);
+                String remove = globalRows.remove(rowNum);
                 assertEquals(remove, row);
             }
         }, l -> {
@@ -127,7 +127,7 @@ public class LogTaskTest {
             // ignore
         }
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
     }
 
     /**
@@ -151,7 +151,6 @@ public class LogTaskTest {
         LogPosition logPosition = LogPosition.of(1, 1, "testlog", "", beforeTwoDay, 0);
         LogTask logTask = new LogTask(logPosition, rows -> {
             for (String row : rows) {
-                System.out.println(logPosition.getLastExecute() + "***" + row + "***");
                 String s = row.split("\t")[0];
                 int rowNum = Integer.parseInt(s);
                 LocalDate current = logPosition.getLastExecute();
@@ -161,14 +160,14 @@ public class LogTaskTest {
                 } else if (current.equals(beforeOneDay)) {
                     remove = beforeOneRows.remove(rowNum);
                 } else {
-                    remove = rows.remove(rowNum);
+                    remove = globalRows.remove(rowNum);
                 }
                 assertEquals(remove, row);
             }
         }, l -> {
         }, this::buildFilePath);
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
         assertThat(beforeTwoRows.size(), is(0));
         assertThat(beforeOneRows.size(), is(0));
     }
@@ -205,14 +204,14 @@ public class LogTaskTest {
                 } else if (current.equals(beforeOneDay)) {
                     remove = beforeOneRows.remove(rowNum);
                 } else {
-                    remove = rows.remove(rowNum);
+                    remove = globalRows.remove(rowNum);
                 }
                 assertEquals(remove, row);
             }
         }, l -> {
         }, this::buildFilePath);
         logTask.start();
-        assertThat(rows.size(), is(0));
+        assertThat(globalRows.size(), is(0));
         assertThat(beforeTwoRows.size(), is(0));
         assertThat(beforeOneRows.size(), is(0));
     }
@@ -257,7 +256,7 @@ public class LogTaskTest {
         if (path == null) {
             return;
         }
-        this.rows = null;
+        this.globalRows = null;
         File file = path.toFile();
         if (file.exists()) {
             boolean delete = file.delete();
@@ -266,10 +265,10 @@ public class LogTaskTest {
     }
 
     void append(int size) {
-        if (rows == null) {
-            rows = new HashMap<>();
+        if (globalRows == null) {
+            globalRows = new HashMap<>();
         }
-        append(size, this.path, rows);
+        append(size, this.path, globalRows);
     }
 
     void append(int size, Path path, Map<Integer, String> rows) {

@@ -52,7 +52,6 @@ public class UploadScheduler {
         }
         uploadConfig.setEvents(new ArrayList<>(map.values()));
 
-        System.out.println(JSON.toJSONString(uploadConfig.getEvents(), SerializerFeature.DisableCircularReferenceDetect));
         // 初始化游戏服配置
         initServerConfig();
 

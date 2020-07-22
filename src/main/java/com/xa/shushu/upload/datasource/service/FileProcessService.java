@@ -139,6 +139,9 @@ public class FileProcessService {
     @PreDestroy
     public void close() {
         running = false;
+        if (readThread == null) {
+            return;
+        }
         readThread.interrupt();
         for (List<LogTask> tasks : logTasks.values()) {
             for (LogTask logTask : tasks) {

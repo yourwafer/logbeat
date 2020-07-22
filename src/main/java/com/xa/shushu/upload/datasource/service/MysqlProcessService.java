@@ -17,7 +17,9 @@ import javax.annotation.PreDestroy;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -97,6 +99,12 @@ public class MysqlProcessService {
                         return;
                     }
                     scheduledExecutorService.schedule(this, mysqlConfig.getInterval(), TimeUnit.MINUTES);
+                    LocalDateTime now = LocalDateTime.now();
+                    log.debug("mysql任务[{}]下次执行时间[{}][{}]",
+                            mysqlConfig.getName(),
+                            mysqlConfig.getInterval(),
+                            now.plusMinutes(mysqlConfig.getInterval())
+                    );
                     return;
                 }
                 long delay = mysqlConfig.getInterval();
@@ -106,9 +114,21 @@ public class MysqlProcessService {
                     unit = TimeUnit.MILLISECONDS;
                 }
                 scheduledExecutorService.schedule(this, delay, unit);
+                LocalDateTime now = LocalDateTime.now();
+                log.debug("mysql任务[{}]下次执行时间[{}][{}]",
+                        mysqlConfig.getName(),
+                        mysqlConfig.getInterval(),
+                        now.plusMinutes(mysqlConfig.getInterval())
+                );
             }
         };
         scheduledExecutorService.schedule(command, mysqlConfig.getInterval(), TimeUnit.MINUTES);
+        LocalDateTime now = LocalDateTime.now();
+        log.debug("mysql任务[{}]下次执行时间[{}][{}]",
+                mysqlConfig.getName(),
+                mysqlConfig.getInterval(),
+                now.plusMinutes(mysqlConfig.getInterval())
+        );
     }
 
     private Connection buildConnect(int operator, int server) {

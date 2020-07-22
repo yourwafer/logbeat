@@ -1,10 +1,10 @@
 package com.xa.shushu.upload.datasource.service;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.xa.shushu.upload.datasource.config.*;
 import com.xa.shushu.upload.datasource.service.config.EventConfigExcel;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.util.IOUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -144,17 +145,11 @@ public class UploadScheduler {
     }
 
     private UploadConfig buildConfig() {
-        Path path;
-        try {
-            Resource resource = systemConfig.getConfigPath();
-            path = resource.getFile().toPath();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
         byte[] bytes;
         try {
-            bytes = Files.readAllBytes(path);
+            Resource resource = systemConfig.getConfigPath();
+            InputStream inputStream = resource.getInputStream();
+            bytes = IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

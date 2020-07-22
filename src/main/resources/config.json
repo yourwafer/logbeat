@@ -1,7 +1,7 @@
 {
   "mysqlSources": {
     "charge-query": {
-      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial,TIMESTAMPDIFF(SECOND,Vip.firstChargeTime,ChargeOrder.completeAt)<=10 as isFirstCharge from Account,ChargeOrder,vip where ChargeOrder.deal='1' and ChargeOrder.`completeAt` >= ? and ChargeOrder.`completeAt` < ? and ChargeOrder.target = Account.id and Vip.id = Account.id",
+      "sql": "SELECT (ChargeOrder.target >> 40) & conv(\"3FFFL\",16,10) as server,(ChargeOrder.target >> 54) & conv(\"1FFL\",16,10) as operator,Account.name,ChargeOrder.completeAt as time,ChargeOrder.goods as goodsId,ChargeOrder.money,ChargeOrder.orderId,ChargeOrder.serial,TIMESTAMPDIFF(SECOND,Vip.firstChargeTime,ChargeOrder.completeAt)<=10 as isFirstCharge from Account,ChargeOrder,Vip where ChargeOrder.deal='1' and ChargeOrder.`completeAt` >= ? and ChargeOrder.`completeAt` < ? and ChargeOrder.target = Account.id and Vip.id = Account.id",
       "interval": 5
     }
   },

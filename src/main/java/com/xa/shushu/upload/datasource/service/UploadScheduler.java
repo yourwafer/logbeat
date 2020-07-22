@@ -106,7 +106,7 @@ public class UploadScheduler {
             if (line.startsWith("#")) {
                 continue;
             }
-            String[] split = line.split("\\s");
+            String[] split = line.split("\\s+");
             int operator = Integer.parseInt(split[0]);
             int server = Integer.parseInt(split[1]);
             String port = split[2];

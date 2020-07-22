@@ -101,6 +101,11 @@ public class MysqlTask {
             if (!running) {
                 return;
             }
+            log.debug("执行mysql检索数据[{}][{}][{}][{}][{}]", mysqlConfig.getName(),
+                    mysqlPosition.getStart(),
+                    mysqlPosition.getEnd(),
+                    mysqlPosition.getExecuteTime(),
+                    mysqlConfig.getSql());
             List<String[]> list = SqlExecutor.list(connection, mysqlConfig.getSql(), mysqlPosition.getStart(), mysqlPosition.getEnd());
             if (!running) {
                 return;

@@ -36,6 +36,9 @@ public class LogEventDataConsumer {
     }
 
     public void consumeArray(List<String[]> colArray) {
+        if (colArray == null || colArray.isEmpty()) {
+            return;
+        }
         for (EventConfig eventConfig : eventConfigs) {
             List<Map<String, Object>> rows = new ArrayList<>(colArray.size());
             for (String[] cols : colArray) {
@@ -50,6 +53,7 @@ public class LogEventDataConsumer {
                 rows.add(values);
             }
             ReportUtils.rows(rows.size());
+            log.debug("解析类型[{}]数据行数[{}]", eventConfig.getName(), rows.size());
             eventPush.push(eventConfig, JSON.toJSONStringWithDateFormat(rows, PushConfiguration.DEFAULT_DATE_FORMAT));
         }
     }

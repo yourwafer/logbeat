@@ -72,9 +72,14 @@ public class LogEventDataConsumer {
         if (account == null) {
             return;
         }
+
         account = account.trim();
         int index = account.indexOf(".");
+        String oidSid = "";
         if (index >= 0) {
+            if (index < account.length()) {
+                oidSid = account.substring(index + 1);
+            }
             account = account.substring(0, index);
         }
         String[] userIdChannel = account.split("_");
@@ -89,6 +94,16 @@ public class LogEventDataConsumer {
         Map<String, Object> properties = (Map<String, Object>) values.computeIfAbsent("properties", k -> new HashMap<>());
         properties.put("channel", channelId);
         properties.put("userId", userId);
+
+        if (!oidSid.isEmpty()) {
+            String[] os = oidSid.split("_");
+            if (os.length > 1) {
+                int operator = Integer.parseInt(os[0]);
+                int server = Integer.parseInt(os[1]);
+                properties.putIfAbsent("operator", operator);
+                properties.putIfAbsent("server", server);
+            }
+        }
     }
 
     private Map<String, Object> parse(EventConfig eventConfig, String[] cols) {

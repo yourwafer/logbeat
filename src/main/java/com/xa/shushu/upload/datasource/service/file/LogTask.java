@@ -234,7 +234,9 @@ public class LogTask {
         if (!pre.equals(lastExecute)) {
             logPosition.updateTime(lastExecute);
         }
-
+        if (logPosition.getPosition() < 0) {
+            logPosition.setPosition(0);
+        }
         return null;
     }
 

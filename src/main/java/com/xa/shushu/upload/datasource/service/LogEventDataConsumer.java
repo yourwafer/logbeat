@@ -64,7 +64,7 @@ public class LogEventDataConsumer {
         if ("track".equals(uploadType)) {
             String eventName = eventConfig.getName();
             values.put("#event_name", eventName);
-        } else if (!"user_set".equals(uploadType)) {
+        } else if ((!"user_set".equals(uploadType)) && (!"user_setOnce".equals(uploadType))) {
             return;
         }
 
